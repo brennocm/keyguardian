@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // Importe a tela de login
+// 1. Importe seu controlador de autenticação
+import '../model/auth_controller.dart'; 
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -9,8 +10,77 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  // 2. Crie os controladores de texto para ler os campos
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  // 3. Crie uma instância do seu AuthController
+  final _authController = AuthController();
+
+  // 4. Variáveis de estado da UI
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
+  bool _isLoading = false; // Para controlar o "carregando"
+
+  // 5. Limpe os controladores quando a tela for fechada
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // 6. Função principal para lidar com a criação da conta
+  Future<void> _handleCreateAccount() async {
+    // Validação simples
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorSnackbar('As senhas não coincidem.');
+      return;
+    }
+
+    // Inicia o loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 7. Chama o método do seu controller!
+      await _authController.signUpWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      // 8. Sucesso! O AuthGate vai lidar com a navegação para a HomeScreen
+      //    automaticamente. Nós só precisamos fechar esta tela.
+      if (mounted) {
+        // Volta para a WelcomeScreen (e o AuthGate vai agir)
+        Navigator.of(context).pop(); 
+      }
+    } catch (e) {
+      // 9. Se der erro, mostre o snackbar
+      _showErrorSnackbar(e.toString());
+    }
+
+    // Para o loading, independentemente de sucesso ou erro
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  // Helper para mostrar mensagens de erro
+  void _showErrorSnackbar(String message) {
+    // Remove "Exception: " da mensagem
+    final displayMessage = message.replaceAll('Exception: ', '');
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(displayMessage),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +118,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                _buildTextField(label: 'E-mail', keyboardType: TextInputType.emailAddress),
+                
+                // --- CAMPO DE E-MAIL ATUALIZADO ---
+                _buildTextField(
+                  label: 'E-mail',
+                  controller: _emailController, // Conectado
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                
                 const SizedBox(height: 20),
+                
+                // --- CAMPO DE SENHA ATUALIZADO ---
                 _buildPasswordField(
                   label: 'Senha',
+                  controller: _passwordController, // Conectado
                   isObscured: _isPasswordObscured,
                   onToggleVisibility: () {
                     setState(() {
@@ -59,9 +139,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     });
                   },
                 ),
+                
                 const SizedBox(height: 20),
+                
+                // --- CAMPO DE REPETIR SENHA ATUALIZADO ---
                 _buildPasswordField(
                   label: 'Repita a senha',
+                  controller: _confirmPasswordController, // Conectado
                   isObscured: _isConfirmPasswordObscured,
                   onToggleVisibility: () {
                     setState(() {
@@ -69,15 +153,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     });
                   },
                 ),
+                
                 const SizedBox(height: 40),
+                
+                // --- BOTÃO ATUALIZADO ---
                 ElevatedButton(
-                  onPressed: () {
-                    // --- ALTERAÇÃO AQUI ---
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
-                  },
+                  // Desabilita o botão se estiver carregando
+                  onPressed: _isLoading ? null : _handleCreateAccount,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF212121),
                     foregroundColor: Colors.white,
@@ -86,13 +168,22 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text(
-                    'Próximo',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox( // Mostra o "loading"
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text( // Mostra o texto normal
+                          'Próximo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -103,7 +194,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
-  Widget _buildTextField({required String label, TextInputType? keyboardType}) {
+  // --- WIDGET ATUALIZADO PARA ACEITAR UM CONTROLLER ---
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -116,6 +212,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller, // Conectado
           keyboardType: keyboardType,
           decoration: InputDecoration(
             filled: true,
@@ -139,8 +236,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
+  // --- WIDGET ATUALIZADO PARA ACEITAR UM CONTROLLER ---
   Widget _buildPasswordField({
     required String label,
+    required TextEditingController controller,
     required bool isObscured,
     required VoidCallback onToggleVisibility,
   }) {
@@ -156,6 +255,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller, // Conectado
           obscureText: isObscured,
           decoration: InputDecoration(
             filled: true,

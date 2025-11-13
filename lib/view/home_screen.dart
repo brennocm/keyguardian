@@ -5,7 +5,7 @@ import 'user_profile_screen.dart';
 import 'welcome_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

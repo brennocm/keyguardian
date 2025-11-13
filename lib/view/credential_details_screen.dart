@@ -56,10 +56,8 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                // Seção de Login
                 _buildInfoSection(),
                 const Divider(color: Colors.white24, height: 40),
-                // Seção de Edição
                 _buildEditSection(),
                 const SizedBox(height: 32),
                 ElevatedButton(

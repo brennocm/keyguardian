@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522897305550",
+    "project_id": "keyguardian-83d25",
+    "storage_bucket": "keyguardian-83d25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522897305550:android:60aca2580cb62dfe46459f",
+        "android_client_info": {
+          "package_name": "com.example.atividade_01"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxMClSvXOciSr14r7ghGwyBx_0Sxffpms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
