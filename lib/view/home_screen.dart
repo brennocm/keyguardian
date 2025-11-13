@@ -1,42 +1,52 @@
 import 'package:flutter/material.dart';
 import 'credential_details_screen.dart';
 import 'password_generator_screen.dart';
-import 'user_profile_screen.dart';
+import 'user_profile_screen.dart'; // Removido o aviso de "não usado"
 import 'welcome_screen.dart';
+import '../model/database_controller.dart';
+import '../model/auth_controller.dart'; 
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final String masterKey;
+  
+  const HomeScreen({super.key, required this.masterKey});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  
+  final AuthController _authController = AuthController();
+  final DatabaseController _dbController = DatabaseController();
+
+  Future<void> _handleLogout() async {
+    await _authController.signOut();
+     if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (Route<dynamic> route) => false,
+        );
+     }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<PasswordEntry> entries = [
-      const PasswordEntry(title: 'Hack the box - Build and sustain hig...', url: 'https://www.hackthebox.com/'),
-      const PasswordEntry(title: 'Shodan Search Engine - The entire...', url: 'https://account.shodan.io/'),
-      const PasswordEntry(title: 'TryHackMe - The Hacking platform...', url: 'https://www.tryhackme.com'),
-      const PasswordEntry(title: 'Facebook - Your favorite social med...', url: 'https://www.facebook.com/'),
-      const PasswordEntry(title: 'Instagram - Simille more for a bett...', url: 'https://www.instagram.com/'),
-      const PasswordEntry(title: 'PalmeirasPay - O banco da familli...', url: 'https://www.palmeiraspay.com/'),
-      const PasswordEntry(title: 'SPFC - O mais querido', url: 'https://www.saopaulofc.net/'),
-      const PasswordEntry(title: 'Sympla - O evento próximo de você', url: 'https://www.sympla.com.br'),
-      const PasswordEntry(title: 'Amazon - Tudo em um só lugar', url: 'https://www.amazon.com'),
-      const PasswordEntry(title: 'Santos Futebol Clube - O Maior Bras...', url: 'https://www.santosfc.com'),
-    ];
-
     const Color primaryTextColor = Color(0xFFF5B984);
 
     return Scaffold(
       backgroundColor: const Color(0xFF212121),
       appBar: AppBar(
         iconTheme: const IconThemeData(color: primaryTextColor),
-        title: const Text(
-          'Todas as entradas',
-          style: TextStyle(
-            color: primaryTextColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+         title: const Text(
+           'Todas as entradas',
+           style: TextStyle(
+             color: primaryTextColor,
+             fontWeight: FontWeight.bold,
+           ),
+         ),
+         backgroundColor: Colors.transparent,
+         elevation: 0,
       ),
       drawer: Drawer(
         backgroundColor: const Color(0xFFFFDAB9),
@@ -53,6 +63,8 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // --- CORREÇÃO AQUI ---
+                        // Adicionando o link para UserProfileScreen
                         GestureDetector(
                           onTap: () {
                             Navigator.pop(context); // Fecha o drawer
@@ -88,13 +100,14 @@ class HomeScreen extends StatelessWidget {
                         style: TextStyle(
                             color: Color(0xFF212121),
                             fontWeight: FontWeight.bold)),
-                    onTap: () {
-                      Navigator.pop(context); // Fecha o drawer
+                     onTap: () {
+                      Navigator.pop(context); 
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const PasswordGeneratorScreen()));
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PasswordGeneratorScreen()
+                        )
+                      );
                     },
                   ),
                 ],
@@ -105,53 +118,89 @@ class HomeScreen extends StatelessWidget {
               title: const Text('Sair',
                   style: TextStyle(
                       color: Color(0xFF212121), fontWeight: FontWeight.bold)),
-              onTap: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                  (Route<dynamic> route) => false,
-                );
-              },
+              onTap: _handleLogout, // Conectado
             ),
             const SizedBox(height: 20), 
           ],
         ),
       ),
-      body: ListView.builder(
-        itemCount: entries.length,
-        itemBuilder: (context, index) {
-          final entry = entries[index];
-          final subtitleText =
-              entry.url.replaceAll('https://', '').replaceAll('www.', '');
+      body: StreamBuilder<List<PasswordEntry>>(
+        stream: _dbController.getCredentialsStream(),
+        builder: (context, snapshot) {
+          
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: primaryTextColor),
+            );
+          }
 
-          return ListTile(
-            leading: const Icon(Icons.arrow_forward_ios,
-                color: Colors.white70, size: 16),
-            title: Text(entry.title,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            subtitle: Text(subtitleText,
-                style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CredentialDetailsScreen(entry: entry),
-                ),
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Ocorreu um erro: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'Nenhuma senha salva ainda.\nClique no botão + para adicionar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            );
+          }
+
+          final entries = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              final subtitleText =
+                  entry.url.replaceAll('https://', '').replaceAll('www.', '');
+
+              return ListTile(
+                leading: const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white70, size: 16),
+                title: Text(entry.title,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text(subtitleText,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CredentialDetailsScreen(
+                        entry: entry,
+                        masterKey: widget.masterKey, // Passamos a chave
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Criar a tela "add_credential_screen.dart"
+          // Por enquanto, vamos adicionar um teste
+          _dbController.addCredential(
+            title: "Meu Site de Teste",
+            url: "https://teste.com",
+            username: "usuario@teste.com",
+            plainTextPassword: "MinhaSenhaSuperSecreta123",
+            masterKey: widget.masterKey,
+          );
+        },
+        backgroundColor: const Color(0xFFF5B984),
+        child: const Icon(Icons.add, color: Color(0xFF212121)),
+      ),
     );
   }
-}
-
-class PasswordEntry {
-  final String title;
-  final String url;
-
-  const PasswordEntry({
-    required this.title,
-    required this.url,
-  });
 }

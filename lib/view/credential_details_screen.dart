@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'home_screen.dart'; 
+// 1. IMPORTAMOS O NOSSO CONTROLLER E O MODELO
+import '../model/database_controller.dart';
 
 class CredentialDetailsScreen extends StatefulWidget {
+  // 2. AGORA RECEBEMOS O PasswordEntry E A masterKey
   final PasswordEntry entry;
+  final String masterKey;
 
-  const CredentialDetailsScreen({super.key, required this.entry});
+  const CredentialDetailsScreen({
+    super.key, 
+    required this.entry,
+    required this.masterKey,
+  });
 
   @override
   State<CredentialDetailsScreen> createState() =>
@@ -13,21 +20,105 @@ class CredentialDetailsScreen extends StatefulWidget {
 }
 
 class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
+  // 3. Instância do nosso controlador
+  final _dbController = DatabaseController();
+  
+  // 4. Controladores de texto para os campos de "Editar"
+  late TextEditingController _titleController;
+  late TextEditingController _urlController;
+  late TextEditingController _usernameController;
+  late TextEditingController _passwordController;
+
   bool _isPasswordVisible = false;
-  bool _isOldPasswordVisible = false;
-  bool _isNewPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
   bool _showSuccessMessage = false;
 
+  // 5. Variável para guardar a senha descriptografada
+  String _decryptedPassword = "";
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 6. Pré-populamos os campos de texto com os dados da senha
+    _titleController = TextEditingController(text: widget.entry.title);
+    _urlController = TextEditingController(text: widget.entry.url);
+    _usernameController = TextEditingController(text: widget.entry.username);
+    
+    // 7. DESCRIPTOGRAFAMOS A SENHA AO ABRIR A TELA
+    _decryptedPassword = _dbController.decrypt(
+      widget.entry.encryptedPassword, 
+      widget.masterKey
+    );
+    _passwordController = TextEditingController(text: _decryptedPassword);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _urlController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+
+  // 8. Função para COPIAR
+  void _copyToClipboard(String text, String A_SENHA_FOI_COPIADA) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(A_SENHA_FOI_COPIADA)),
+    );
+  }
+  
+  // 9. Função para SALVAR MUDANÇAS
+  Future<void> _handleUpdateCredential() async {
+    try {
+      await _dbController.updateCredential(
+        docId: widget.entry.id, 
+        title: _titleController.text, 
+        url: _urlController.text, 
+        username: _usernameController.text, 
+        plainTextPassword: _passwordController.text, 
+        masterKey: widget.masterKey
+      );
+      
+      _showSuccess(); // Mostra o pop-up de sucesso
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // 10. Função para DELETAR
+  Future<void> _handleDeleteCredential() async {
+    // TODO: Mostrar um pop-up de confirmação antes de deletar
+    try {
+      await _dbController.deleteCredential(widget.entry.id);
+      if (mounted) {
+        Navigator.of(context).pop(); // Volta para a HomeScreen
+      }
+    } catch (e) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao deletar: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+
+  // (Resto do seu código da tela de detalhes, atualizado para usar os controllers)
+  // ... (build, _buildInfoSection, _buildEditSection, etc.)
+  // O código abaixo é uma versão atualizada da sua tela
+  // para usar os novos controllers e lógica
+  
+  // (Função de pop-up de sucesso)
   void _showSuccess() {
-    setState(() {
-      _showSuccessMessage = true;
-    });
+    setState(() => _showSuccessMessage = true);
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        setState(() {
-          _showSuccessMessage = false;
-        });
+        setState(() => _showSuccessMessage = false);
+        Navigator.of(context).pop(); // Volta para a Home após o sucesso
       }
     });
   }
@@ -49,6 +140,13 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          // Botão de Deletar
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            onPressed: _handleDeleteCredential,
+          )
+        ],
       ),
       body: Stack(
         children: [
@@ -61,7 +159,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
                 _buildEditSection(),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _showSuccess,
+                  onPressed: _handleUpdateCredential, // Botão para SALVAR
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFDAB9),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -70,7 +168,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Confirmar',
+                    'Salvar Mudanças',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -82,7 +180,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
             ),
           ),
           if (_showSuccessMessage)
-            Center(
+             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                 decoration: BoxDecoration(
@@ -93,7 +191,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'AÇÃO CONCLUÍDA COM SUCESSO!',
+                      'SALVO COM SUCESSO!',
                       style: TextStyle(
                         color: Color(0xFF212121),
                         fontWeight: FontWeight.bold,
@@ -119,19 +217,27 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Login',
-          style: TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          widget.entry.title,
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 24),
         _buildCopyableField(
-          label: 'kevin_mitnik@sec.consulting',
+          label: 'Título',
+          value: widget.entry.title,
+          isPassword: false,
+        ),
+        const SizedBox(height: 16),
+        _buildCopyableField(
+          label: 'URL',
+          value: widget.entry.url,
+          isPassword: false,
+        ),
+         const SizedBox(height: 16),
+        _buildCopyableField(
+          label: 'Usuário',
+          value: widget.entry.username,
+          isPassword: false,
+        ),
+        const SizedBox(height: 16),
+        _buildCopyableField(
+          label: 'Senha',
+          value: _decryptedPassword, // Mostra a senha descriptografada
           isPassword: true,
           isVisible: _isPasswordVisible,
           onVisibilityChanged: () {
@@ -155,33 +261,24 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
         ),
         const SizedBox(height: 16),
         _buildEditableField(
-          label: 'Senha antiga:',
-          isVisible: _isOldPasswordVisible,
-          onVisibilityChanged: () {
-            setState(() {
-              _isOldPasswordVisible = !_isOldPasswordVisible;
-            });
-          },
+          label: 'Título:',
+          controller: _titleController,
+        ),
+        const SizedBox(height: 16),
+         _buildEditableField(
+          label: 'URL:',
+          controller: _urlController,
         ),
         const SizedBox(height: 16),
         _buildEditableField(
-          label: 'Senha nova:',
-          isVisible: _isNewPasswordVisible,
-          onVisibilityChanged: () {
-            setState(() {
-              _isNewPasswordVisible = !_isNewPasswordVisible;
-            });
-          },
+          label: 'Usuário:',
+          controller: _usernameController,
         ),
         const SizedBox(height: 16),
         _buildEditableField(
-          label: 'Confirmar senha nova:',
-          isVisible: _isConfirmPasswordVisible,
-          onVisibilityChanged: () {
-            setState(() {
-              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-            });
-          },
+          label: 'Senha:',
+          controller: _passwordController,
+          isPassword: true
         ),
       ],
     );
@@ -189,32 +286,34 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
 
   Widget _buildCopyableField({
     required String label,
+    required String value,
     required bool isPassword,
-    required bool isVisible,
-    required VoidCallback onVisibilityChanged,
+    bool isVisible = false,
+    VoidCallback? onVisibilityChanged,
   }) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            isVisible ? label : '●' * label.length,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ),
-        if (isPassword)
-          IconButton(
-            icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: Colors.white70),
-            onPressed: onVisibilityChanged,
-          ),
-        IconButton(
-          icon: const Icon(Icons.copy_outlined, color: Colors.white70),
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: label));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Copiado para a área de transferência!')),
-            );
-          },
+        Text(label, style: const TextStyle(color: Color(0xFFF5B984), fontSize: 14)),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                isPassword && !isVisible ? '●' * value.length : value,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            if (isPassword)
+              IconButton(
+                icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: Colors.white70),
+                onPressed: onVisibilityChanged,
+              ),
+            IconButton(
+              icon: const Icon(Icons.copy_outlined, color: Colors.white70),
+              onPressed: () => _copyToClipboard(value, '$label copiado(a)!'),
+            ),
+          ],
         ),
       ],
     );
@@ -222,24 +321,19 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
 
   Widget _buildEditableField({
     required String label,
-    required bool isVisible,
-    required VoidCallback onVisibilityChanged,
+    required TextEditingController controller,
+    bool isPassword = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white70)),
         TextField(
-          obscureText: !isVisible,
+          controller: controller,
+          obscureText: isPassword, // Usamos o controller, não precisamos de state
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            hintText: '●●●●●●●●●●●●',
             hintStyle: TextStyle(color: Colors.grey[700]),
-            suffixIcon: IconButton(
-              icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: Colors.white70),
-              onPressed: onVisibilityChanged,
-            ),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white24),
             ),
@@ -252,4 +346,3 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
     );
   }
 }
-

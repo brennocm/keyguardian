@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'view/welcome_screen.dart'; // Você já tem
-import 'view/home_screen.dart'; // Você já tem
-import 'model/auth_controller.dart'; // Usando seu caminho
-import 'package:firebase_core/firebase_core.dart'; // Importe este
-import 'firebase_options.dart'; // Importe o arquivo que acabou de ser criado
-import 'package:firebase_auth/firebase_auth.dart'; // Importe este
+import 'view/welcome_screen.dart';
+// 1. IMPORTAMOS A MASTER KEY SCREEN
+import 'view/master_key_screen.dart';
+import 'model/auth_controller.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // 1. Torne o main assíncrono
 void main() async {
@@ -54,7 +55,6 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: authController.authStateChanges, // Ouve as mudanças de login
       builder: (context, snapshot) {
-        
         // Adicionando um check de conexão
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -64,10 +64,10 @@ class AuthGate extends StatelessWidget {
 
         // Se o usuário está LOGADO
         if (snapshot.hasData) {
-          // --- CORREÇÃO AQUI ---
-          // O erro da sua imagem acontece aqui. HomeScreen não é 'const'.
-          // Removi o 'const'
-          return const HomeScreen(); // Vai para a tela principal
+          // --- ESTA É A CORREÇÃO ---
+          // Em vez de ir para a HomeScreen, vá para a MasterKeyScreen
+          // para "destrancar" o cofre.
+          return const MasterKeyScreen();
         }
 
         // Se o usuário está DESLOGADO
