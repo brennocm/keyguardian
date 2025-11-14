@@ -50,8 +50,6 @@ dependencies:
   
   # Ícones (já estava no seu projeto original)
   cupertino_icons: ^1.0.8
-  cloud_firestore: ^6.1.0
-  encrypt: ^5.0.3
 
 dev_dependencies:
   flutter_test:
@@ -75,7 +73,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/icon-with-name.png
+    - assets/images/icon-without-name.png
 
 
   # To add assets to your application, add an assets section, like this:

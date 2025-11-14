@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-// 1. Importe seu controlador
+// 1. Importe seu controlador (com o caminho de pacote)
 import 'package:atividade_01/model/auth_controller.dart';
 // A MasterKeyScreen não é mais chamada aqui, o AuthGate vai cuidar disso
-// import 'master_key_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      // 7. Sucesso! O AuthGate vai navegar para a HomeScreen.
+      // 7. Sucesso! O AuthGate vai navegar automaticamente.
       // Apenas fechamos a tela de login.
       if (mounted) {
         Navigator.of(context).pop();
@@ -55,9 +54,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Para o loading
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   // Helper para mostrar erros
@@ -168,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: IconButton(
                     icon: Icon(
                       _isPasswordVisible
-                          ? Icons.visibility_outlined // Inverti os ícones
+                          ? Icons.visibility_outlined 
                           : Icons.visibility_off_outlined,
                       color: Colors.grey,
                     ),

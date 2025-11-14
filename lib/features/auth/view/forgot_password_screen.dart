@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador
 import 'package:atividade_01/model/auth_controller.dart';
-// 'login_screen.dart' não é mais necessário aqui
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -47,9 +46,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _showErrorSnackbar(e.toString());
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   // Helper de Erro
@@ -84,7 +85,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFDAB9),
       appBar: AppBar(
-        // ... seu appbar ...
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF212121)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -94,7 +100,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ... sua imagem e título ...
+                const SizedBox(height: 20),
+                Image.asset('assets/images/icon-without-name.png', height: 80),
+                const SizedBox(height: 24),
+                const Text(
+                  'Esqueci minha senha',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF212121),
+                  ),
+                ),
                 const SizedBox(height: 40),
                 
                 // --- CAMPO DE E-MAIL ATUALIZADO ---
@@ -105,10 +122,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 
                 // Os campos de senha não são necessários aqui
-                // const SizedBox(height: 20),
-                // _buildPasswordField(...),
-                // const SizedBox(height: 20),
-                // _buildPasswordField(...),
                 
                 const SizedBox(height: 40),
                 
@@ -167,39 +180,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           controller: controller, // Conectado
           keyboardType: keyboardType,
           decoration: InputDecoration(
-            // ... sua decoração ...
-             filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: Color(0xFF212121),
-                width: 2.0,
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: Color(0xFF212121),
+                  width: 2.0,
+                ),
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: Color(0xFF212121),
-                width: 2.0,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: Color(0xFF212121),
+                  width: 2.0,
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: Color(0xFF212121),
-                width: 2.5,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: Color(0xFF212121),
+                  width: 2.5,
+                ),
               ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 15,
-            ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 15,
+              ),
           ),
         ),
       ],
     );
   }
-
-  // O _buildPasswordField não é mais usado nesta tela
 }
