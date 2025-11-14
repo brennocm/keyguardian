@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador de autenticação
-import '../model/auth_controller.dart'; 
+import 'package:atividade_01/model/auth_controller.dart'; 
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});

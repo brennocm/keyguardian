@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador
-import '../model/auth_controller.dart';
+import 'package:atividade_01/model/auth_controller.dart';
 // A MasterKeyScreen não é mais chamada aqui, o AuthGate vai cuidar disso
 // import 'master_key_screen.dart'; 
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart'; // Vamos navegar para a Home
-// 1. IMPORTAMOS O AUTH CONTROLLER
-import '../model/auth_controller.dart';
+import 'package:atividade_01/features/2_credentials/view/home_screen.dart';
 
 class MasterKeyScreen extends StatefulWidget {
   const MasterKeyScreen({super.key});

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'view/welcome_screen.dart';
-// 1. IMPORTAMOS A MASTER KEY SCREEN
-import 'view/master_key_screen.dart';
-import 'model/auth_controller.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:atividade_01/features/1_auth/view/welcome_screen.dart'; // Você já tem
+import 'package:atividade_01/features/2_credentials/view/home_screen.dart'; // Você já tem
+import 'model/auth_controller.dart'; // Usando seu caminho
+import 'package:firebase_core/firebase_core.dart'; // Importe este
+import 'firebase_options.dart'; // Importe o arquivo que acabou de ser criado
+import 'package:firebase_auth/firebase_auth.dart'; // Importe este
 
 // 1. Torne o main assíncrono
 void main() async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador
-import '../model/auth_controller.dart';
+import 'package:atividade_01/model/auth_controller.dart';
 // 'login_screen.dart' não é mais necessário aqui
 
 class ForgotPasswordScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'master_key_confirmation_screen.dart';
+import 'package:atividade_01/features/3_master_key/view/master_key_confirmation_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
