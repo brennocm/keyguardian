@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// 1. IMPORTAMOS O NOSSO CONTROLLER E O MODELO
-import '../model/database_controller.dart';
+import 'package:atividade_01/model/database_controller.dart';
 
 class CredentialDetailsScreen extends StatefulWidget {
   // 2. AGORA RECEBEMOS O PasswordEntry E A masterKey

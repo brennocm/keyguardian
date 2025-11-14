@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'credential_details_screen.dart';
-import 'package:atividade_01/features/4_generator/view/password_generator_screen.dart';
-import 'package:atividade_01/features/1_auth/view/user_profile_screen.dart'; // Removido o aviso de "não usado"
-import 'package:atividade_01/features/1_auth/view/welcome_screen.dart';
-import '../model/database_controller.dart';
-import '../model/auth_controller.dart'; 
+import 'package:atividade_01/features/generator/view/password_generator_screen.dart';
+import 'package:atividade_01/features/auth/view/user_profile_screen.dart'; // Removido o aviso de "não usado"
+import 'package:atividade_01/features/auth/view/welcome_screen.dart';
+import 'package:atividade_01/model/database_controller.dart';
+import 'package:atividade_01/model/auth_controller.dart'; 
 
 class HomeScreen extends StatefulWidget {
   final String masterKey;

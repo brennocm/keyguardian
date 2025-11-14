@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:atividade_01/features/1_auth/view/welcome_screen.dart'; // Você já tem
-import 'package:atividade_01/features/2_credentials/view/home_screen.dart'; // Você já tem
-import 'model/auth_controller.dart'; // Usando seu caminho
-import 'package:firebase_core/firebase_core.dart'; // Importe este
-import 'firebase_options.dart'; // Importe o arquivo que acabou de ser criado
-import 'package:firebase_auth/firebase_auth.dart'; // Importe este
+// 1. IMPORTES ATUALIZADOS para sua nova estrutura
+import 'package:atividade_01/features/auth/view/welcome_screen.dart';
+import 'package:atividade_01/features/master_key/view/master_key_screen.dart'; // <-- ADICIONADO
+import 'package:atividade_01/model/auth_controller.dart'; // <-- ADICIONADO
+
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // 1. Torne o main assíncrono
 void main() async {
