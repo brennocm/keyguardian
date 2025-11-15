@@ -4,27 +4,19 @@ import 'package:crypto/crypto.dart';
 
 class HibpService {
   static const String _apiUrl = 'https://api.pwnedpasswords.com/range/';
-
-  /// Verifica se a senha foi comprometida usando k-anonymity
-  /// Retorna o número de vezes que a senha apareceu em vazamentos
-  /// Retorna 0 se a senha não foi encontrada
   Future<int> checkPassword(String password) async {
     try {
-      // 1. Gera o hash SHA-1 da senha
       final bytes = utf8.encode(password);
       final digest = sha1.convert(bytes);
       final hash = digest.toString().toUpperCase();
-
-      // 2. Separa os primeiros 5 caracteres do resto
       final prefix = hash.substring(0, 5);
       final suffix = hash.substring(5);
 
-      // 3. Consulta a API com apenas os 5 primeiros caracteres (k-anonymity)
       final response = await http.get(
         Uri.parse('$_apiUrl$prefix'),
         headers: {
           'User-Agent': 'KeyGuardian-Password-Manager',
-          'Add-Padding': 'true', // Adiciona padding para melhor privacidade
+          'Add-Padding': 'true', 
         },
       );
 
@@ -32,7 +24,6 @@ class HibpService {
         throw Exception('Erro ao consultar API: ${response.statusCode}');
       }
 
-      // 4. Procura o sufixo na resposta
       final lines = response.body.split('\n');
       for (final line in lines) {
         final parts = line.split(':');
@@ -40,17 +31,13 @@ class HibpService {
           return int.parse(parts[1].trim());
         }
       }
-
-      // 5. Senha não foi encontrada nos vazamentos
       return 0;
     } catch (e) {
-      // Em caso de erro de rede, retorna -1 para indicar que não foi possível verificar
       print('Erro ao verificar senha no HIBP: $e');
       return -1;
     }
   }
 
-  /// Retorna uma mensagem amigável baseada no resultado
   String getSecurityMessage(int breachCount) {
     if (breachCount == -1) {
       return 'Não foi possível verificar a segurança da senha';
@@ -63,7 +50,6 @@ class HibpService {
     }
   }
 
-  /// Retorna a cor para o indicador de segurança
   SecurityLevel getSecurityLevel(int breachCount) {
     if (breachCount == -1) {
       return SecurityLevel.unknown;

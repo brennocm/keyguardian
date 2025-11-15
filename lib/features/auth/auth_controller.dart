@@ -1,5 +1,3 @@
-// lib/features/auth/auth_controller.dart
-
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthController {
@@ -48,10 +46,8 @@ class AuthController {
     await _auth.signOut();
   }
 
-  // --- MÉTODOS DE PERFIL (NOVOS) ---
 
   /// Reautentica o usuário com a senha atual.
-  /// (Necessário para operações sensíveis como trocar senha)
   Future<void> reauthenticateWithPassword(String password) async {
     try {
       final user = _auth.currentUser;
@@ -69,7 +65,7 @@ class AuthController {
       await user.reauthenticateWithCredential(credential);
 
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e); // Reutiliza seu helper de erro
+      throw _handleAuthException(e); 
     }
   }
 
@@ -78,7 +74,7 @@ class AuthController {
     try {
       await _auth.currentUser?.updatePassword(newPassword);
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e); // Reutiliza seu helper de erro
+      throw _handleAuthException(e); 
     }
   }
 
@@ -106,7 +102,7 @@ class AuthController {
       case 'network-request-failed':
         message = 'Sem conexão com a internet.';
         break;
-      // NOVO: Adiciona erro de reautenticação
+
       case 'requires-recent-login':
         message = 'Esta operação é sensível e requer login recente. Tente novamente.';
         break;

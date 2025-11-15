@@ -11,10 +11,10 @@ abstract class CredentialState extends Equatable {
 // Estado inicial, BLoC acabou de começar
 class CredentialInitial extends CredentialState {}
 
-// Estado de "Carregando..." (ex: buscando a lista)
+// Estado de "Carregando..." 
 class CredentialLoading extends CredentialState {}
 
-// Estado de sucesso: Lista carregada e pronta para a UI
+// Estado de sucesso: Lista carregada
 class CredentialLoaded extends CredentialState {
   final List<CredentialModel> credentials;
 
@@ -24,8 +24,7 @@ class CredentialLoaded extends CredentialState {
   List<Object> get props => [credentials];
 }
 
-// Estado de sucesso: Uma operação (Add, Update, Delete) funcionou
-// A UI pode usar isso para mostrar um "Sucesso!" e fechar a tela.
+// Estado de sucesso: Operação (Add, Update, Delete) 
 class CredentialOperationSuccess extends CredentialState {}
 
 // Estado de falha: Algo deu errado

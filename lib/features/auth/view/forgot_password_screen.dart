@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-// 1. Importe seu controlador
 import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  // 1.1 - MELHORIA: Aceita um e-mail inicial
   final String? initialEmail;
 
   const ForgotPasswordScreen({super.key, this.initialEmail});
@@ -17,7 +15,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _authController = AuthController();
   bool _isLoading = false;
 
-  // 1.2 - MELHORIA: Preenche o campo se um e-mail foi passado
   @override
   void initState() {
     super.initState();
@@ -43,9 +40,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       _showSuccessSnackbar('E-mail de redefinição enviado com sucesso!');
       
-      // 1.3 - MELHORIA: Retorna 'true' para avisar a tela anterior
       if (mounted) {
-        Navigator.of(context).pop(true); // <--- MUDANÇA AQUI
+        Navigator.of(context).pop(true); 
       }
     } catch (e) {
       _showErrorSnackbar(e.toString());
@@ -58,7 +54,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
   }
 
-  // Helper de Erro
   void _showErrorSnackbar(String message) {
     final displayMessage = message.replaceAll('Exception: ', '');
     ScaffoldMessenger.of(context).showSnackBar(
@@ -69,7 +64,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // Helper de Sucesso
   void _showSuccessSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -119,7 +113,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 40),
                 
-                // --- CAMPO DE E-MAIL ATUALIZADO ---
                 _buildTextField(
                   label: 'E-mail',
                   controller: _emailController, // Conectado
@@ -128,7 +121,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 
                 const SizedBox(height: 40),
                 
-                // --- BOTÃO ATUALIZADO ---
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handlePasswordReset, // Conectado
                   style: ElevatedButton.styleFrom(
@@ -162,10 +154,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // --- WIDGET ATUALIZADO ---
   Widget _buildTextField({
     required String label,
-    required TextEditingController controller, // Adicionado
+    required TextEditingController controller,
     TextInputType? keyboardType,
   }) {
     return Column(
@@ -180,7 +171,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         TextField(
-          controller: controller, // Conectado
+          controller: controller,
           keyboardType: keyboardType,
           decoration: InputDecoration(
               filled: true,

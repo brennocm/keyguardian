@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
-// 1. IMPORTES ATUALIZADOS para sua nova estrutura
 import 'package:atividade_01/features/auth/view/welcome_screen.dart';
-import 'package:atividade_01/features/master_key/view/master_key_screen.dart'; // <-- ADICIONADO
-import 'package:atividade_01/features/auth/auth_controller.dart'; // <-- ADICIONADO
-
+import 'package:atividade_01/features/master_key/view/master_key_screen.dart'; 
+import 'package:atividade_01/features/auth/auth_controller.dart'; 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// 1. Torne o main assíncrono
 void main() async {
-  // 2. Garanta que o Flutter está inicializado
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 3. Inicialize o Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 4. Rode o app
   runApp(const KeyGuardianApp());
 }
 
@@ -39,19 +32,16 @@ class KeyGuardianApp extends StatelessWidget {
           ),
         ),
       ),
-      // 5. Use o AuthGate para decidir a tela inicial
       home: const AuthGate(),
     );
   }
 }
-
-// 6. Adicione este widget de "Portão de Autenticação" no final do arquivo
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authController = AuthController(); // Instancia seu controller
+    final authController = AuthController();
 
     return StreamBuilder<User?>(
       stream: authController.authStateChanges, // Ouve as mudanças de login
@@ -65,14 +55,11 @@ class AuthGate extends StatelessWidget {
 
         // Se o usuário está LOGADO
         if (snapshot.hasData) {
-          // --- ESTA É A CORREÇÃO ---
-          // Em vez de ir para a HomeScreen, vá para a MasterKeyScreen
-          // para "destrancar" o cofre.
           return const MasterKeyScreen();
         }
 
         // Se o usuário está DESLOGADO
-        return const WelcomeScreen(); // Vai para a tela de boas-vindas
+        return const WelcomeScreen(); 
       },
     );
   }

@@ -1,10 +1,8 @@
-// lib/features/master_key/view/master_key_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:atividade_01/features/credentials/view/home_screen.dart';
 import 'package:atividade_01/features/auth/auth_controller.dart';
 import 'package:atividade_01/core/services/master_key_service.dart';
-import 'package:atividade_01/features/auth/view/welcome_screen.dart'; // <-- Import necessário
+import 'package:atividade_01/features/auth/view/welcome_screen.dart'; 
 
 class MasterKeyScreen extends StatefulWidget {
   const MasterKeyScreen({super.key});
@@ -30,7 +28,6 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
   Future<void> _handleLogout() async {
     await _authController.signOut();
     
-    // --- CORREÇÃO APLICADA AQUI ---
     // Redireciona o usuário de volta à tela inicial após o logout
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
@@ -57,7 +54,7 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
         if (mounted) {
           _showError('Chave-mestra incorreta. Tente novamente.');
         }
-        // ATUALIZAÇÃO: Resetar o loading no caso de falha
+        // Resetar o loading no caso de falha
         setState(() => _isLoading = false); 
         return;
       }

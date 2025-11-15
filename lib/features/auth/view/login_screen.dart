@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-// 1. Importe seu controlador (com o caminho de pacote)
 import 'package:atividade_01/features/auth/auth_controller.dart';
-// 2. Master Key Screen
 import 'package:atividade_01/features/master_key/view/master_key_screen.dart';
-// 3. Forgot Password Screen
 import 'package:atividade_01/features/auth/view/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,14 +11,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controladores de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  // Controller de autenticação
   final _authController = AuthController();
 
-  // Estado da UI
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
@@ -32,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Função para lidar com o login
   Future<void> _handleLogin() async {
     setState(() {
       _isLoading = true;
@@ -44,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      // Sucesso → navega direto para a MasterKeyScreen
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -74,7 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    // Mostra confirmação se a tela de reset devolveu "true"
     if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -85,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Helper para mostrar erros
   void _showErrorSnackbar(String message) {
     final displayMessage = message.replaceAll('Exception: ', '');
     ScaffoldMessenger.of(context).showSnackBar(
@@ -179,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Label Senha
             const Text(
               'Senha',
               style: TextStyle(

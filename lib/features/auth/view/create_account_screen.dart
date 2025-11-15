@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-// 1. Importe seu controlador de autenticação
 import 'package:atividade_01/features/auth/auth_controller.dart'; 
-// 2. IMPORTE A TELA DE CRIAR CHAVE-MESTRA
 import 'package:atividade_01/features/master_key/view/create_master_key_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -23,7 +21,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   // Variáveis de estado da UI
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-  bool _isLoading = false; // Para controlar o "carregando"
+  bool _isLoading = false; 
 
   // Limpe os controladores quando a tela for fechada
   @override

@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _credentialBloc.add(LoadCredentials(widget.masterKey));
   }
 
-  // CORREÇÃO: Verifica se o BLoC não está fechado antes de fechar
+  // Verifica se o BLoC não está fechado antes de fechar
   @override
   void dispose() {
     if (!_credentialBloc.isClosed) {
@@ -39,15 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // CORREÇÃO: Fecha o BLoC *antes* de fazer o signOut
+  // CFecha o BLoC *antes* de fazer o signOut
   Future<void> _handleLogout() async {
-    // 1. Fecha o BLoC (encerra a stream do Firestore)
     if (!_credentialBloc.isClosed) {
       await _credentialBloc.close();
     }
-    // 2. Faz logout do Firebase Auth
     await _authController.signOut();
-    // 3. Volta para a tela de boas-vindas
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
@@ -167,11 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         body: BlocConsumer<CredentialBloc, CredentialState>(
-          // CORREÇÃO: Lógica do Listener para ignorar o erro de logout
+          //  Lógica do Listener para ignorar o erro de logout
           listener: (context, state) {
             if (state is CredentialFailure) {
               // Só mostra o SnackBar se o erro NÃO for de permissão
-              // E o usuário AINDA estiver logado.
               final isPermissionDenied = state.error.toString().contains('permission-denied');
               final isSignedOut = FirebaseAuth.instance.currentUser == null;
 
@@ -204,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             // Falha
             if (state is CredentialFailure) {
-              // CORREÇÃO: Lógica do Builder para não mostrar erro durante o logout
+              // Lógica do Builder para não mostrar erro durante o logout
               final msg = state.error.toString();
               final isPermissionDenied = msg.contains('permission-denied');
               final isSignedOut =

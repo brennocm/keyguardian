@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CredentialModel {
-  final String? id; // O ID do documento no Firestore
+  final String? id; 
   final String title;
   final String username;
-  final String password; // O BLoC passará a senha Criptografada para cá
-  final String category; // Para o requisito de "imagem com sentido"
-  final String websiteUrl; // Opcional, mas útil
+  final String password; 
+  final String category; 
+  final String websiteUrl;
 
   CredentialModel({
     this.id,
@@ -17,7 +17,6 @@ class CredentialModel {
     this.websiteUrl = '',
   });
 
-  // Converte um objeto CredentialModel para um Map (para enviar ao Firestore)
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -28,11 +27,10 @@ class CredentialModel {
     };
   }
 
-  // Converte um DocumentSnapshot (vindo do Firestore) para um CredentialModel
   factory CredentialModel.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map<String, dynamic>;
     return CredentialModel(
-      id: doc.id, // Pega o ID do documento
+      id: doc.id, 
       title: data['title'] ?? '',
       username: data['username'] ?? '',
       password: data['password'] ?? '',

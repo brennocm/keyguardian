@@ -1,10 +1,6 @@
-// lib/features/master_key/view/create_master_key_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:atividade_01/core/services/master_key_service.dart';
 import 'package:atividade_01/features/credentials/view/home_screen.dart';
-
-// --- CORREÇÃO: IMPORTS ADICIONADOS ---
 import 'package:atividade_01/features/auth/auth_controller.dart';
 import 'package:atividade_01/features/auth/view/welcome_screen.dart';
 
@@ -23,7 +19,6 @@ class _CreateMasterKeyScreenState extends State<CreateMasterKeyScreen> {
   bool _isLoading = false;
 
   final MasterKeyService _masterKeyService = MasterKeyService();
-  // --- CORREÇÃO: CONTROLLER ADICIONADO ---
   final AuthController _authController = AuthController();
 
 
@@ -34,7 +29,6 @@ class _CreateMasterKeyScreenState extends State<CreateMasterKeyScreen> {
     super.dispose();
   }
 
-  // --- CORREÇÃO: NOVA FUNÇÃO DE CANCELAR/LOGOUT ---
   Future<void> _handleCancelAndLogout() async {
     await _authController.signOut();
     if (mounted) {
@@ -103,7 +97,6 @@ class _CreateMasterKeyScreenState extends State<CreateMasterKeyScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF212121)),
-          // --- CORREÇÃO: ONPRESSED ATUALIZADO ---
           onPressed: _isLoading ? null : _handleCancelAndLogout,
         ),
       ),

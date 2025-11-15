@@ -9,7 +9,6 @@ abstract class CredentialEvent extends Equatable {
 }
 
 class LoadCredentials extends CredentialEvent {
-  // ADICIONAMOS ISSO
   final String masterKey;
   const LoadCredentials(this.masterKey);
 
@@ -19,7 +18,6 @@ class LoadCredentials extends CredentialEvent {
 
 class AddCredential extends CredentialEvent {
   final CredentialModel credential;
-  // ADICIONAMOS ISSO
   final String masterKey;
 
   const AddCredential(this.credential, this.masterKey);
@@ -30,7 +28,6 @@ class AddCredential extends CredentialEvent {
 
 class UpdateCredential extends CredentialEvent {
   final CredentialModel credential;
-  // ADICIONAMOS ISSO
   final String masterKey;
 
   const UpdateCredential(this.credential, this.masterKey);
