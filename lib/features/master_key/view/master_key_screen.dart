@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:atividade_01/features/credentials/view/home_screen.dart';
-import 'package:atividade_01/features/auth/view/auth_controller.dart';
+import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class MasterKeyScreen extends StatefulWidget {
   const MasterKeyScreen({super.key});

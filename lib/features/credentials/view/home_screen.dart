@@ -9,7 +9,7 @@ import 'package:atividade_01/features/credentials/data/credential_provider.dart'
 import 'package:atividade_01/features/generator/view/password_generator_screen.dart';
 import 'package:atividade_01/features/auth/view/user_profile_screen.dart';
 import 'package:atividade_01/features/auth/view/welcome_screen.dart';
-import 'package:atividade_01/features/auth/view/auth_controller.dart';
+import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   final String masterKey;

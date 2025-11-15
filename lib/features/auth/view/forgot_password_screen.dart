@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador
-import 'package:atividade_01/features/auth/view/auth_controller.dart';
+import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   // 1.1 - MELHORIA: Aceita um e-mail inicial

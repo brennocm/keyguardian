@@ -1,5 +1,8 @@
+// lib/features/auth/view/user_profile_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:atividade_01/features/master_key/view/master_key_confirmation_screen.dart';
+// 1. IMPORTES (REMOVEMOS O MASTER KEY, ADICIONAMOS O AUTH CONTROLLER)
+import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -9,8 +12,98 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  // 2. CONTROLADORES E ESTADO
+  final AuthController _authController = AuthController();
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  late String _email;
   bool _isUserPasswordVisible = false;
-  bool _isMasterKeyVisible = false;
+  bool _isMasterKeyVisible = false; // (Este é apenas para a UI, por enquanto)
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 3. BUSCA O E-MAIL REAL DO USUÁRIO
+    _email = _authController.currentUser?.email ?? 'E-mail não encontrado';
+  }
+
+  @override
+  void dispose() {
+    // 4. LIMPA OS CONTROLADORES
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // 5. FUNÇÃO PRINCIPAL PARA ATUALIZAR SENHA
+  Future<void> _handleUpdatePassword() async {
+    if (_isLoading) return;
+
+    final oldPass = _oldPasswordController.text;
+    final newPass = _newPasswordController.text;
+    final confirmPass = _confirmPasswordController.text;
+
+    // Validações
+    if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
+      _showErrorSnackbar('Preencha todos os campos de senha.');
+      return;
+    }
+    if (newPass != confirmPass) {
+      _showErrorSnackbar('As novas senhas não coincidem.');
+      return;
+    }
+    if (newPass.length < 6) {
+      _showErrorSnackbar('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Passo 1: Reautenticar com a senha antiga
+      await _authController.reauthenticateWithPassword(oldPass);
+      
+      // Passo 2: Se a reautenticação for bem-sucedida, atualiza a senha
+      await _authController.updateUserPassword(newPass);
+
+      // Sucesso
+      _showSuccessSnackbar('Senha atualizada com sucesso!');
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      _showErrorSnackbar(e.toString());
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 6. HELPERS DE SNACKBAR
+  void _showErrorSnackbar(String message) {
+    final displayMessage = message.replaceAll('Exception: ', '');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(displayMessage),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,18 +142,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 7. E-MAIL REAL CONECTADO
         _buildInfoField(
-            label: 'E-mail de usuário', value: 'kevin_mitnik@sec.consulting'),
+          label: 'E-mail de usuário', 
+          value: _email, // <-- MODIFICADO
+        ),
         const SizedBox(height: 24),
         _buildInfoField(
           label: 'Senha de usuário',
-          value: '●●●●●●●●●●●●',
+          value: '●●●●●●●●●●●●', // (Valor estático é OK)
           isObscured: true,
           isVisible: _isUserPasswordVisible,
           onToggleVisibility: () =>
               setState(() => _isUserPasswordVisible = !_isUserPasswordVisible),
         ),
         const SizedBox(height: 24),
+        // (A Chave-Mestra não é salva, apenas usada para descriptografar)
         _buildInfoField(
           label: 'Chave-mestra de usuário',
           value: '●●●●●●●●●●●●●●●●●●',
@@ -78,43 +175,58 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Editar',
+          'Editar Senha de Acesso', // Título atualizado
           style: TextStyle(
               color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 24),
-        _buildEditableField(label: 'Senha antiga:'),
+        // 8. CONTROLADORES CONECTADOS
+        _buildEditableField(
+          label: 'Senha antiga:',
+          controller: _oldPasswordController, // <-- MODIFICADO
+        ),
         const SizedBox(height: 16),
-        _buildEditableField(label: 'Senha nova:'),
+        _buildEditableField(
+          label: 'Senha nova:',
+          controller: _newPasswordController, // <-- MODIFICADO
+        ),
         const SizedBox(height: 16),
-        _buildEditableField(label: 'Confirmar senha nova:'),
+        _buildEditableField(
+          label: 'Confirmar senha nova:',
+          controller: _confirmPasswordController, // <-- MODIFICADO
+        ),
       ],
     );
   }
+
   Widget _buildConfirmButton() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const MasterKeyConfirmationScreen()),
-          );
-        },
+        // 9. BOTÃO CONECTADO
+        onPressed: _isLoading ? null : _handleUpdatePassword, // <-- MODIFICADO
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFDAB9),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
-        child: const Text(
-          'Confirmar',
-          style: TextStyle(
-              color: Color(0xFF212121),
-              fontWeight: FontWeight.bold,
-              fontSize: 16),
-        ),
+        child: _isLoading 
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF212121),
+              ),
+            )
+          : const Text(
+              'Confirmar Mudança',
+              style: TextStyle(
+                  color: Color(0xFF212121),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16),
+            ),
       ),
     );
   }
@@ -159,16 +271,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildEditableField({required String label}) {
+  // MODIFICADO para aceitar um controller
+  Widget _buildEditableField({
+    required String label, 
+    required TextEditingController controller,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white)),
         const SizedBox(height: 8),
-        const TextField(
+        TextField( // <-- MODIFICADO de const TextField
+          controller: controller, // <-- MODIFICADO
           obscureText: true,
-          style: TextStyle(color: Colors.white),
-          decoration: InputDecoration(
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
             hintText: '●●●●●●●●●●●●',
             hintStyle: TextStyle(color: Colors.grey),
             enabledBorder: UnderlineInputBorder(
@@ -183,4 +300,3 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 }
-

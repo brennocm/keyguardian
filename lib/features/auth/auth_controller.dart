@@ -1,24 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// lib/features/auth/auth_controller.dart
 
-// Esta é a classe "Model" (ou Controller) que sua UI vai usar
-// para falar com o Firebase.
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthController {
   // Instância principal do Firebase Auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // --- STREAMS ---
-  // Um "ouvinte" que avisa o app se o usuário fez login ou logout
-  // O AuthGate usa isso.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // --- GETTERS ---
-  // Pega o usuário logado atualmente
   User? get currentUser => _auth.currentUser;
 
   // --- MÉTODOS DE AUTENTICAÇÃO ---
 
-  // Criar conta (SignUp)
   Future<UserCredential?> signUpWithEmailAndPassword(
       String email, String password) async {
     try {
@@ -26,12 +21,10 @@ class AuthController {
           .createUserWithEmailAndPassword(email: email, password: password);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      // Lança a exceção para ser tratada na UI (create_account_screen)
       throw _handleAuthException(e);
     }
   }
 
-  // Fazer login (SignIn)
   Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {
     try {
@@ -39,12 +32,10 @@ class AuthController {
           email: email, password: password);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      // Lança a exceção para ser tratada na UI (login_screen)
       throw _handleAuthException(e);
     }
   }
 
-  // Enviar email de redefinição de senha
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -53,15 +44,47 @@ class AuthController {
     }
   }
 
-  // Fazer logout
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
+  // --- MÉTODOS DE PERFIL (NOVOS) ---
+
+  /// Reautentica o usuário com a senha atual.
+  /// (Necessário para operações sensíveis como trocar senha)
+  Future<void> reauthenticateWithPassword(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception("Usuário não encontrado ou e-mail inválido.");
+      }
+
+      // Cria a credencial com a senha antiga
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      
+      // Reautentica
+      await user.reauthenticateWithCredential(credential);
+
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e); // Reutiliza seu helper de erro
+    }
+  }
+
+  /// Atualiza a senha de usuário do Firebase
+  Future<void> updateUserPassword(String newPassword) async {
+    try {
+      await _auth.currentUser?.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e); // Reutiliza seu helper de erro
+    }
+  }
+
+
   // --- TRATAMENTO DE ERROS ---
 
-  // Método privado para traduzir os códigos de erro do Firebase
-  // para mensagens amigáveis.
   Exception _handleAuthException(FirebaseAuthException e) {
     String message;
     switch (e.code) {
@@ -83,10 +106,13 @@ class AuthController {
       case 'network-request-failed':
         message = 'Sem conexão com a internet.';
         break;
+      // NOVO: Adiciona erro de reautenticação
+      case 'requires-recent-login':
+        message = 'Esta operação é sensível e requer login recente. Tente novamente.';
+        break;
       default:
         message = 'Ocorreu um erro. Tente novamente.';
     }
-    // Retorna uma Exceção padrão com a mensagem tratada
     return Exception(message);
   }
 }
