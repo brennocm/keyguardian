@@ -3,23 +3,29 @@ import 'package:flutter/material.dart';
 import 'package:atividade_01/model/auth_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  // 1.1 - MELHORIA: Aceita um e-mail inicial
+  final String? initialEmail;
+
+  const ForgotPasswordScreen({super.key, this.initialEmail});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  // 2. Controlador de texto
   final _emailController = TextEditingController();
-
-  // 3. Instância do AuthController
   final _authController = AuthController();
-
-  // 4. Variável de estado
   bool _isLoading = false;
 
-  // 5. Função para lidar com a redefinição
+  // 1.2 - MELHORIA: Preenche o campo se um e-mail foi passado
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialEmail != null && widget.initialEmail!.isNotEmpty) {
+      _emailController.text = widget.initialEmail!;
+    }
+  }
+
   Future<void> _handlePasswordReset() async {
     if (_emailController.text.trim().isEmpty) {
       _showErrorSnackbar('Por favor, insira seu e-mail.');
@@ -31,18 +37,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      // 6. Chama o método do controller
       await _authController.sendPasswordResetEmail(
         _emailController.text.trim(),
       );
 
-      // 7. Sucesso! Mostra uma mensagem e fecha a tela
       _showSuccessSnackbar('E-mail de redefinição enviado com sucesso!');
+      
+      // 1.3 - MELHORIA: Retorna 'true' para avisar a tela anterior
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true); // <--- MUDANÇA AQUI
       }
     } catch (e) {
-      // 8. Erro
       _showErrorSnackbar(e.toString());
     }
 
@@ -89,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF212121)),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(false), // Retorna 'false' se cancelar
         ),
       ),
       body: SafeArea(
@@ -120,8 +125,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _emailController, // Conectado
                   keyboardType: TextInputType.emailAddress,
                 ),
-                
-                // Os campos de senha não são necessários aqui
                 
                 const SizedBox(height: 40),
                 

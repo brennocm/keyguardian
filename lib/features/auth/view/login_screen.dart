@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador (com o caminho de pacote)
 import 'package:atividade_01/model/auth_controller.dart';
-// A MasterKeyScreen não é mais chamada aqui, o AuthGate vai cuidar disso
+// 2. Master Key Screen
+import 'package:atividade_01/features/master_key/view/master_key_screen.dart';
+// 3. Forgot Password Screen
+import 'package:atividade_01/features/auth/view/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,14 +14,14 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 2. Controladores de texto
+  // Controladores de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // 3. Instância do AuthController
+  // Controller de autenticação
   final _authController = AuthController();
 
-  // 4. Variáveis de estado da UI
+  // Estado da UI
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
@@ -29,35 +32,56 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // 5. Função para lidar com o login
+  // Função para lidar com o login
   Future<void> _handleLogin() async {
-    // Inicia o loading
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // 6. Chama o método de login do controller
       await _authController.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      // 7. Sucesso! O AuthGate vai navegar automaticamente.
-      // Apenas fechamos a tela de login.
+      // Sucesso → navega direto para a MasterKeyScreen
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const MasterKeyScreen(),
+          ),
+        );
       }
     } catch (e) {
-      // 8. Se der erro, mostre o snackbar
       _showErrorSnackbar(e.toString());
     }
 
-    // Para o loading
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Função para "Esqueci minha senha"
+  Future<void> _handleForgotPassword() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(
+          initialEmail: _emailController.text.trim(),
+        ),
+      ),
+    );
+
+    // Mostra confirmação se a tela de reset devolveu "true"
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verifique seu e-mail para redefinir a senha.'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -90,11 +114,14 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             const SizedBox(height: 20),
+
+            // Logo
             Image.asset(
               'assets/images/icon-without-name.png',
               height: 60,
             ),
             const SizedBox(height: 20),
+
             const Text(
               'Entre em sua conta',
               textAlign: TextAlign.center,
@@ -105,6 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 50),
+
+            // Label E-mail
             const Text(
               'E-mail',
               style: TextStyle(
@@ -113,29 +142,44 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // --- CAMPO DE E-MAIL ATUALIZADO ---
+
+            // Campo de E-mail
             TextField(
-              controller: _emailController, // Conectado
+              controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.0,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.0,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.5,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
               ),
             ),
             const SizedBox(height: 20),
+
+            // Label Senha
             const Text(
               'Senha',
               style: TextStyle(
@@ -144,32 +188,45 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // --- CAMPO DE SENHA ATUALIZADO ---
+
+            // Campo de Senha
             TextField(
-              controller: _passwordController, // Conectado
+              controller: _passwordController,
               obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.0,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.0,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Color(0xFF212121), width: 2.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF212121),
+                    width: 2.5,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
                 suffixIcon: Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: IconButton(
                     icon: Icon(
                       _isPasswordVisible
-                          ? Icons.visibility_outlined 
+                          ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
                       color: Colors.grey,
                     ),
@@ -182,15 +239,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 40),
-            // --- BOTÃO ATUALIZADO ---
+
+            // Botão de Login
             ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin, // Conectado
+              onPressed: _isLoading ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF212121),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
               child: _isLoading
                   ? const SizedBox(
@@ -204,10 +264,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   : const Text(
                       'Próximo',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
+            ),
+
+            // Botão "Esqueci minha senha"
+            TextButton(
+              onPressed: _handleForgotPassword,
+              child: const Text(
+                'Esqueci minha senha',
+                style: TextStyle(
+                  color: Color(0xFF212121),
+                  fontSize: 14,
+                ),
+              ),
             ),
           ],
         ),

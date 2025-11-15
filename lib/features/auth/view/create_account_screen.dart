@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador de autenticação
 import 'package:atividade_01/model/auth_controller.dart'; 
+// 2. IMPORTE A MASTER KEY SCREEN
+import 'package:atividade_01/features/master_key/view/master_key_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -10,20 +12,20 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  // 2. Crie os controladores de texto para ler os campos
+  // Crie os controladores de texto para ler os campos
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // 3. Crie uma instância do seu AuthController
+  // Crie uma instância do seu AuthController
   final _authController = AuthController();
 
-  // 4. Variáveis de estado da UI
+  // Variáveis de estado da UI
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
   bool _isLoading = false; // Para controlar o "carregando"
 
-  // 5. Limpe os controladores quando a tela for fechada
+  // Limpe os controladores quando a tela for fechada
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,7 +34,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     super.dispose();
   }
 
-  // 6. Função principal para lidar com a criação da conta
+  // Função principal para lidar com a criação da conta
   Future<void> _handleCreateAccount() async {
     // Validação simples
     if (_passwordController.text != _confirmPasswordController.text) {
@@ -46,27 +48,32 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     });
 
     try {
-      // 7. Chama o método do seu controller!
+      // Chama o método do seu controller!
       await _authController.signUpWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      // 8. Sucesso! O AuthGate vai lidar com a navegação para a HomeScreen
-      //    automaticamente. Nós só precisamos fechar esta tela.
+      // --- CORREÇÃO AQUI (Opção 2 da sua análise) ---
+      // Navega direto para a MasterKeyScreen, substituindo a tela atual
       if (mounted) {
-        // Volta para a WelcomeScreen (e o AuthGate vai agir)
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const MasterKeyScreen(),
+          ),
+        );
       }
     } catch (e) {
-      // 9. Se der erro, mostre o snackbar
+      // Se der erro, mostre o snackbar
       _showErrorSnackbar(e.toString());
     }
 
     // Para o loading, independentemente de sucesso ou erro
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   // Helper para mostrar mensagens de erro
@@ -119,7 +126,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 ),
                 const SizedBox(height: 40),
                 
-                // --- CAMPO DE E-MAIL ATUALIZADO ---
+                // --- CAMPO DE E-MAIL ---
                 _buildTextField(
                   label: 'E-mail',
                   controller: _emailController, // Conectado
@@ -128,7 +135,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 
                 const SizedBox(height: 20),
                 
-                // --- CAMPO DE SENHA ATUALIZADO ---
+                // --- CAMPO DE SENHA ---
                 _buildPasswordField(
                   label: 'Senha',
                   controller: _passwordController, // Conectado
@@ -142,7 +149,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 
                 const SizedBox(height: 20),
                 
-                // --- CAMPO DE REPETIR SENHA ATUALIZADO ---
+                // --- CAMPO DE REPETIR SENHA ---
                 _buildPasswordField(
                   label: 'Repita a senha',
                   controller: _confirmPasswordController, // Conectado
@@ -156,9 +163,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 
                 const SizedBox(height: 40),
                 
-                // --- BOTÃO ATUALIZADO ---
+                // --- BOTÃO DE CRIAR CONTA ---
                 ElevatedButton(
-                  // Desabilita o botão se estiver carregando
                   onPressed: _isLoading ? null : _handleCreateAccount,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF212121),
@@ -194,7 +200,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
-  // --- WIDGET ATUALIZADO PARA ACEITAR UM CONTROLLER ---
+  // --- WIDGET PARA CAMPO DE TEXTO ---
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
@@ -236,7 +242,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
-  // --- WIDGET ATUALIZADO PARA ACEITAR UM CONTROLLER ---
+  // --- WIDGET PARA CAMPO DE SENHA ---
   Widget _buildPasswordField({
     required String label,
     required TextEditingController controller,
