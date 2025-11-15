@@ -1,54 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:atividade_01/model/database_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:atividade_01/core/models/credential_model.dart';
+import 'package:atividade_01/features/credentials/bloc/credential_bloc.dart';
+import 'package:atividade_01/features/credentials/bloc/credential_event.dart';
+import 'package:atividade_01/features/credentials/bloc/credential_state.dart';
+import 'package:atividade_01/core/services/hibp_service.dart';
 
 class CredentialDetailsScreen extends StatefulWidget {
-  // 2. AGORA RECEBEMOS O PasswordEntry E A masterKey
-  final PasswordEntry entry;
+  final CredentialModel credential;
   final String masterKey;
+  final CredentialBloc bloc;
 
   const CredentialDetailsScreen({
-    super.key, 
-    required this.entry,
+    super.key,
+    required this.credential,
     required this.masterKey,
+    required this.bloc,
   });
 
   @override
-  State<CredentialDetailsScreen> createState() =>
-      _CredentialDetailsScreenState();
+  State<CredentialDetailsScreen> createState() => _CredentialDetailsScreenState();
 }
 
 class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
-  // 3. Instância do nosso controlador
-  final _dbController = DatabaseController();
-  
-  // 4. Controladores de texto para os campos de "Editar"
   late TextEditingController _titleController;
   late TextEditingController _urlController;
   late TextEditingController _usernameController;
   late TextEditingController _passwordController;
+  late String _selectedCategory;
 
+  final List<String> _categories = ['Rede Social', 'Banco', 'Email', 'Trabalho', 'Outro'];
+  
   bool _isPasswordVisible = false;
   bool _showSuccessMessage = false;
-
-  // 5. Variável para guardar a senha descriptografada
-  String _decryptedPassword = "";
+  bool _isCheckingHibp = false;
+  int _hibpBreachCount = -1;
+  final HibpService _hibpService = HibpService();
 
   @override
   void initState() {
     super.initState();
-
-    // 6. Pré-populamos os campos de texto com os dados da senha
-    _titleController = TextEditingController(text: widget.entry.title);
-    _urlController = TextEditingController(text: widget.entry.url);
-    _usernameController = TextEditingController(text: widget.entry.username);
+    _titleController = TextEditingController(text: widget.credential.title);
+    _urlController = TextEditingController(text: widget.credential.websiteUrl);
+    _usernameController = TextEditingController(text: widget.credential.username);
+    _passwordController = TextEditingController(text: widget.credential.password);
+    _selectedCategory = widget.credential.category;
     
-    // 7. DESCRIPTOGRAFAMOS A SENHA AO ABRIR A TELA
-    _decryptedPassword = _dbController.decrypt(
-      widget.entry.encryptedPassword, 
-      widget.masterKey
-    );
-    _passwordController = TextEditingController(text: _decryptedPassword);
+    // Verifica a senha no HIBP ao abrir
+    _checkPasswordSecurity();
   }
 
   @override
@@ -60,64 +60,65 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
     super.dispose();
   }
 
+  Future<void> _checkPasswordSecurity() async {
+    setState(() => _isCheckingHibp = true);
+    final count = await _hibpService.checkPassword(widget.credential.password);
+    setState(() {
+      _hibpBreachCount = count;
+      _isCheckingHibp = false;
+    });
+  }
 
-  // 8. Função para COPIAR
-  void _copyToClipboard(String text, String A_SENHA_FOI_COPIADA) {
+  void _copyToClipboard(String text, String message) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(A_SENHA_FOI_COPIADA)),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
     );
   }
-  
-  // 9. Função para SALVAR MUDANÇAS
-  Future<void> _handleUpdateCredential() async {
-    try {
-      await _dbController.updateCredential(
-        docId: widget.entry.id, 
-        title: _titleController.text, 
-        url: _urlController.text, 
-        username: _usernameController.text, 
-        plainTextPassword: _passwordController.text, 
-        masterKey: widget.masterKey
-      );
-      
-      _showSuccess(); // Mostra o pop-up de sucesso
 
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
-      );
-    }
+  void _handleUpdate() {
+    final updatedCredential = CredentialModel(
+      id: widget.credential.id,
+      title: _titleController.text,
+      username: _usernameController.text,
+      password: _passwordController.text,
+      category: _selectedCategory,
+      websiteUrl: _urlController.text,
+    );
+
+    widget.bloc.add(UpdateCredential(updatedCredential, widget.masterKey));
   }
 
-  // 10. Função para DELETAR
-  Future<void> _handleDeleteCredential() async {
-    // TODO: Mostrar um pop-up de confirmação antes de deletar
-    try {
-      await _dbController.deleteCredential(widget.entry.id);
-      if (mounted) {
-        Navigator.of(context).pop(); // Volta para a HomeScreen
-      }
-    } catch (e) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao deletar: $e'), backgroundColor: Colors.red),
-      );
-    }
+  void _handleDelete() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar exclusão'),
+        content: const Text('Tem certeza que deseja deletar esta credencial?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Fecha o diálogo
+              widget.bloc.add(DeleteCredential(widget.credential.id!));
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Deletar'),
+          ),
+        ],
+      ),
+    );
   }
 
-
-  // (Resto do seu código da tela de detalhes, atualizado para usar os controllers)
-  // ... (build, _buildInfoSection, _buildEditSection, etc.)
-  // O código abaixo é uma versão atualizada da sua tela
-  // para usar os novos controllers e lógica
-  
-  // (Função de pop-up de sucesso)
   void _showSuccess() {
     setState(() => _showSuccessMessage = true);
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() => _showSuccessMessage = false);
-        Navigator.of(context).pop(); // Volta para a Home após o sucesso
+        Navigator.of(context).pop();
       }
     });
   }
@@ -126,39 +127,51 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
   Widget build(BuildContext context) {
     const Color primaryTextColor = Color(0xFFF5B984);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF212121),
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: primaryTextColor),
-        title: const Text(
-          'Perfil de credencial',
-          style: TextStyle(
-            color: primaryTextColor,
-            fontWeight: FontWeight.bold,
+    return BlocListener<CredentialBloc, CredentialState>(
+      bloc: widget.bloc,
+      listener: (context, state) {
+        if (state is CredentialOperationSuccess) {
+          _showSuccess();
+        }
+        if (state is CredentialFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro: ${state.error}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF212121),
+        appBar: AppBar(
+          iconTheme: const IconThemeData(color: primaryTextColor),
+          title: const Text(
+            'Perfil de credencial',
+            style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
           ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: _handleDelete,
+            )
+          ],
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          // Botão de Deletar
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: _handleDeleteCredential,
-          )
-        ],
-      ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
+        body: Stack(
+          children: [
+            ListView(
+              padding: const EdgeInsets.all(16.0),
               children: [
+                _buildSecurityIndicator(),
+                const SizedBox(height: 24),
                 _buildInfoSection(),
                 const Divider(color: Colors.white24, height: 40),
                 _buildEditSection(),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _handleUpdateCredential, // Botão para SALVAR
+                  onPressed: _handleUpdate,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFDAB9),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -177,37 +190,101 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
                 ),
               ],
             ),
-          ),
-          if (_showSuccessMessage)
-             Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'SALVO COM SUCESSO!',
-                      style: TextStyle(
-                        color: Color(0xFF212121),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+            if (_showSuccessMessage)
+              Container(
+                color: Colors.black87,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    SizedBox(height: 24),
-                    Icon(
-                      Icons.lock_outline,
-                      color: Color(0xFF212121),
-                      size: 48,
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'SALVO COM SUCESSO!',
+                          style: TextStyle(
+                            color: Color(0xFF212121),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Icon(Icons.check_circle, color: Colors.green, size: 48),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityIndicator() {
+    if (_isCheckingHibp) {
+      return const Card(
+        color: Color(0xFF2a2a2a),
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+              ),
+              SizedBox(width: 16),
+              Text('Verificando segurança...', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final level = _hibpService.getSecurityLevel(_hibpBreachCount);
+    final message = _hibpService.getSecurityMessage(_hibpBreachCount);
+    
+    Color cardColor;
+    IconData icon;
+    
+    switch (level) {
+      case SecurityLevel.safe:
+        cardColor = Colors.green.shade800;
+        icon = Icons.check_circle;
+        break;
+      case SecurityLevel.warning:
+        cardColor = Colors.orange.shade800;
+        icon = Icons.warning;
+        break;
+      case SecurityLevel.danger:
+        cardColor = Colors.red.shade800;
+        icon = Icons.dangerous;
+        break;
+      default:
+        cardColor = const Color(0xFF2a2a2a);
+        icon = Icons.help_outline;
+    }
+
+    return Card(
+      color: cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -216,33 +293,19 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCopyableField(
-          label: 'Título',
-          value: widget.entry.title,
-          isPassword: false,
-        ),
+        _buildCopyableField(label: 'Título', value: widget.credential.title),
         const SizedBox(height: 16),
-        _buildCopyableField(
-          label: 'URL',
-          value: widget.entry.url,
-          isPassword: false,
-        ),
-         const SizedBox(height: 16),
-        _buildCopyableField(
-          label: 'Usuário',
-          value: widget.entry.username,
-          isPassword: false,
-        ),
+        _buildCopyableField(label: 'URL', value: widget.credential.websiteUrl),
+        const SizedBox(height: 16),
+        _buildCopyableField(label: 'Usuário', value: widget.credential.username),
         const SizedBox(height: 16),
         _buildCopyableField(
           label: 'Senha',
-          value: _decryptedPassword, // Mostra a senha descriptografada
+          value: widget.credential.password,
           isPassword: true,
           isVisible: _isPasswordVisible,
           onVisibilityChanged: () {
-            setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            });
+            setState(() => _isPasswordVisible = !_isPasswordVisible);
           },
         ),
       ],
@@ -255,29 +318,50 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
       children: [
         const Text(
           'Editar',
-          style: TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        _buildEditableField(
-          label: 'Título:',
-          controller: _titleController,
-        ),
+        _buildEditableField(label: 'Título:', controller: _titleController),
         const SizedBox(height: 16),
-         _buildEditableField(
-          label: 'URL:',
-          controller: _urlController,
-        ),
+        _buildEditableField(label: 'URL:', controller: _urlController),
         const SizedBox(height: 16),
-        _buildEditableField(
-          label: 'Usuário:',
-          controller: _usernameController,
-        ),
+        _buildEditableField(label: 'Usuário:', controller: _usernameController),
         const SizedBox(height: 16),
         _buildEditableField(
           label: 'Senha:',
           controller: _passwordController,
-          isPassword: true
+          isPassword: true,
+        ),
+        const SizedBox(height: 16),
+        _buildCategoryDropdown(),
+      ],
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Categoria:', style: TextStyle(color: Colors.white70)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _selectedCategory,
+          dropdownColor: const Color(0xFF2a2a2a),
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+          ),
+          items: _categories.map((category) {
+            return DropdownMenuItem(value: category, child: Text(category));
+          }).toList(),
+          onChanged: (value) {
+            setState(() => _selectedCategory = value ?? 'Outro');
+          },
         ),
       ],
     );
@@ -286,7 +370,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
   Widget _buildCopyableField({
     required String label,
     required String value,
-    required bool isPassword,
+    bool isPassword = false,
     bool isVisible = false,
     VoidCallback? onVisibilityChanged,
   }) {
@@ -294,18 +378,21 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Color(0xFFF5B984), fontSize: 14)),
+        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
               child: Text(
                 isPassword && !isVisible ? '●' * value.length : value,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
             if (isPassword)
               IconButton(
-                icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: Colors.white70),
+                icon: Icon(
+                  isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: Colors.white70,
+                ),
                 onPressed: onVisibilityChanged,
               ),
             IconButton(
@@ -329,14 +416,13 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
         Text(label, style: const TextStyle(color: Colors.white70)),
         TextField(
           controller: controller,
-          obscureText: isPassword, // Usamos o controller, não precisamos de state
+          obscureText: isPassword,
           style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintStyle: TextStyle(color: Colors.grey[700]),
-            enabledBorder: const UnderlineInputBorder(
+          decoration: const InputDecoration(
+            enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white24),
             ),
-            focusedBorder: const UnderlineInputBorder(
+            focusedBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white),
             ),
           ),

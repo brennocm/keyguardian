@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador de autenticação
-import 'package:atividade_01/model/auth_controller.dart'; 
+import 'package:atividade_01/features/auth/view/auth_controller.dart'; 
 // 2. IMPORTE A MASTER KEY SCREEN
 import 'package:atividade_01/features/master_key/view/master_key_screen.dart';
 
