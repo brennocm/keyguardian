@@ -1,5 +1,7 @@
+// lib/features/credentials/view/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <-- IMPORTADO PARA O CHECK
 import 'package:atividade_01/features/credentials/view/add_credential_screen.dart';
 import 'package:atividade_01/features/credentials/view/credential_details_screen.dart';
 import 'package:atividade_01/features/credentials/bloc/credential_bloc.dart';
@@ -13,9 +15,7 @@ import 'package:atividade_01/features/auth/auth_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   final String masterKey;
-
   const HomeScreen({super.key, required this.masterKey});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -23,7 +23,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthController _authController = AuthController();
   late final CredentialBloc _credentialBloc;
-
   @override
   void initState() {
     super.initState();
@@ -31,14 +30,24 @@ class _HomeScreenState extends State<HomeScreen> {
     _credentialBloc.add(LoadCredentials(widget.masterKey));
   }
 
+  // CORREÇÃO: Verifica se o BLoC não está fechado antes de fechar
   @override
   void dispose() {
-    _credentialBloc.close();
+    if (!_credentialBloc.isClosed) {
+      _credentialBloc.close();
+    }
     super.dispose();
   }
 
+  // CORREÇÃO: Fecha o BLoC *antes* de fazer o signOut
   Future<void> _handleLogout() async {
+    // 1. Fecha o BLoC (encerra a stream do Firestore)
+    if (!_credentialBloc.isClosed) {
+      await _credentialBloc.close();
+    }
+    // 2. Faz logout do Firebase Auth
     await _authController.signOut();
+    // 3. Volta para a tela de boas-vindas
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
@@ -50,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryTextColor = Color(0xFFF5B984);
-
     return BlocProvider.value(
       value: _credentialBloc,
       child: Scaffold(
@@ -88,7 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const UserProfileScreen(),
+                                  builder: (context) =>
+                                      const UserProfileScreen(),
                                 ),
                               );
                             },
@@ -133,7 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PasswordGeneratorScreen(),
+                            builder: (context) =>
+                                const PasswordGeneratorScreen(),
                           ),
                         );
                       },
@@ -157,11 +167,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         body: BlocConsumer<CredentialBloc, CredentialState>(
+          // CORREÇÃO: Lógica do Listener para ignorar o erro de logout
           listener: (context, state) {
             if (state is CredentialFailure) {
+              // Só mostra o SnackBar se o erro NÃO for de permissão
+              // E o usuário AINDA estiver logado.
+              final isPermissionDenied = state.error.toString().contains('permission-denied');
+              final isSignedOut = FirebaseAuth.instance.currentUser == null;
+
+              if (isPermissionDenied && isSignedOut) {
+                // Erro esperado durante o logout, não faz nada.
+                return;
+              }
+              
+              // Para qualquer outro erro, mostre o SnackBar.
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Erro de stream: ${state.error}'),
+                  content: Text('Erro: ${state.error}'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -174,27 +196,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 current is CredentialFailure;
           },
           builder: (context, state) {
-            // Estado de Loading ou Inicial
+            // Loading ou estado inicial
             if (state is CredentialLoading || state is CredentialInitial) {
               return const Center(
                 child: CircularProgressIndicator(color: primaryTextColor),
               );
             }
-
-            // Estado de Falha
+            // Falha
             if (state is CredentialFailure) {
-              return Center(
-                child: Text(
-                  'Ocorreu um erro: ${state.error}',
-                  style: const TextStyle(color: Colors.red),
+              // CORREÇÃO: Lógica do Builder para não mostrar erro durante o logout
+              final msg = state.error.toString();
+              final isPermissionDenied = msg.contains('permission-denied');
+              final isSignedOut =
+                  FirebaseAuth.instance.currentUser == null;
+ 
+              // Se for o erro de permission-denied e o usuário já saiu,
+              // simplesmente não mostra nada (a tela vai ser trocada pelo AuthGate)
+              if (isPermissionDenied && isSignedOut) {
+                return const SizedBox.shrink(); // Retorna widget vazio
+              }
+              
+              // Mostra um erro genérico para outras falhas
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Não foi possível carregar suas senhas.\nVerifique sua chave-mestra ou tente novamente.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
                 ),
               );
             }
-
-            // Estado de Sucesso (Lista Carregada)
+            // Lista carregada
             if (state is CredentialLoaded) {
               final credentials = state.credentials;
-              
               if (credentials.isEmpty) {
                 return const Center(
                   child: Text(
@@ -204,17 +240,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }
-
               return ListView.builder(
                 itemCount: credentials.length,
                 itemBuilder: (context, index) {
                   final credential = credentials[index];
-                  final IconData icon = _getIconForCategory(credential.category);
+                  final IconData icon =
+                      _getIconForCategory(credential.category);
                   final subtitleText = credential.websiteUrl
                       .replaceAll('https://', '')
                       .replaceAll('http://', '')
                       .replaceAll('www.', '');
-
                   return ListTile(
                     leading: Icon(icon, color: Colors.white70, size: 24),
                     title: Text(
@@ -228,8 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitleText.isEmpty ? 'Sem URL' : subtitleText,
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                        fontSize: 12),
                     ),
                     trailing: const Icon(
                       Icons.arrow_forward_ios,
@@ -237,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       size: 16,
                     ),
                     onTap: () {
-                      // Navega para a tela de detalhes
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -253,8 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               );
             }
-
-            // Estado de transição (ex: após OperationSuccess)
+            // Estado de transição
             return const Center(
               child: CircularProgressIndicator(color: primaryTextColor),
             );
@@ -278,8 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  // Método helper para ícones por categoria
+  // Helper para escolher ícone por categoria
   IconData _getIconForCategory(String category) {
     switch (category.toLowerCase()) {
       case 'banco':
