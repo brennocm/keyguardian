@@ -1,6 +1,10 @@
+// lib/features/master_key/view/master_key_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:atividade_01/features/credentials/view/home_screen.dart';
 import 'package:atividade_01/features/auth/auth_controller.dart';
+import 'package:atividade_01/core/services/master_key_service.dart';
+import 'package:atividade_01/features/auth/view/welcome_screen.dart'; // <-- Import necessário
 
 class MasterKeyScreen extends StatefulWidget {
   const MasterKeyScreen({super.key});
@@ -12,9 +16,10 @@ class MasterKeyScreen extends StatefulWidget {
 class _MasterKeyScreenState extends State<MasterKeyScreen> {
   final _masterKeyController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
   
-  // 2. CRIAMOS A INSTÂNCIA DO AUTH CONTROLLER
   final AuthController _authController = AuthController();
+  final MasterKeyService _masterKeyService = MasterKeyService();
 
   @override
   void dispose() {
@@ -22,51 +27,81 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
     super.dispose();
   }
   
-  // 3. FUNÇÃO DE LOGOUT (NOVO)
   Future<void> _handleLogout() async {
-    // Chama o método de sair
     await _authController.signOut();
-    // O AuthGate no main.dart vai detectar isso e trocar 
-    // para a WelcomeScreen automaticamente.
+    
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Redireciona o usuário de volta à tela inicial após o logout
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
-  // Função para destravar o cofre
-  void _unlockVault() {
+  Future<void> _unlockVault() async {
     final masterKey = _masterKeyController.text;
 
     if (masterKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, digite sua chave-mestra.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError('Por favor, digite sua chave-mestra.');
       return;
     }
 
-    // Navega para a Home, passando a chave
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(masterKey: masterKey),
+    setState(() => _isLoading = true);
+
+    try {
+      final isValid = await _masterKeyService.validateMasterKey(masterKey);
+
+      if (!isValid) {
+        if (mounted) {
+          _showError('Chave-mestra incorreta. Tente novamente.');
+        }
+        // ATUALIZAÇÃO: Resetar o loading no caso de falha
+        setState(() => _isLoading = false); 
+        return;
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(masterKey: masterKey),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Erro ao validar chave-mestra: $e');
+      }
+    } finally {
+      if (mounted && _isLoading) { // Só muda se ainda estiver carregando
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFDAB9),
       appBar: AppBar(
-         backgroundColor: Colors.transparent,
-         elevation: 0,
-         leading: IconButton(
-           icon: const Icon(Icons.arrow_back, color: Color(0xFF212121)),
-           // 4. CORRIGIMOS O BOTÃO "VOLTAR"
-           // Em vez de Navigator.pop, chamamos o _handleLogout
-           onPressed: _handleLogout,
-         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF212121)),
+          onPressed: _isLoading ? null : _handleLogout,
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -98,10 +133,10 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              
               TextField(
-                controller: _masterKeyController, // Conectado
+                controller: _masterKeyController,
                 obscureText: !_isPasswordVisible,
+                enabled: !_isLoading,
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -127,9 +162,8 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
                 ),
               ),
               const Spacer(),
-              
               ElevatedButton(
-                onPressed: _unlockVault, // Conectado
+                onPressed: _isLoading ? null : _unlockVault,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF212121),
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -137,14 +171,23 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: const Text(
-                  'Próximo',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Próximo',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
               const SizedBox(height: 40),
             ],

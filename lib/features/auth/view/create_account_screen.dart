@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 // 1. Importe seu controlador de autenticação
 import 'package:atividade_01/features/auth/auth_controller.dart'; 
-// 2. IMPORTE A MASTER KEY SCREEN
-import 'package:atividade_01/features/master_key/view/master_key_screen.dart';
+// 2. IMPORTE A TELA DE CRIAR CHAVE-MESTRA
+import 'package:atividade_01/features/master_key/view/create_master_key_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -54,12 +54,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         _passwordController.text.trim(),
       );
 
-      // --- CORREÇÃO AQUI (Opção 2 da sua análise) ---
-      // Navega direto para a MasterKeyScreen, substituindo a tela atual
+      // Navega para a tela de criar chave-mestra
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => const MasterKeyScreen(),
+            builder: (_) => const CreateMasterKeyScreen(),
           ),
         );
       }
@@ -129,7 +128,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 // --- CAMPO DE E-MAIL ---
                 _buildTextField(
                   label: 'E-mail',
-                  controller: _emailController, // Conectado
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 
@@ -138,7 +137,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 // --- CAMPO DE SENHA ---
                 _buildPasswordField(
                   label: 'Senha',
-                  controller: _passwordController, // Conectado
+                  controller: _passwordController,
                   isObscured: _isPasswordObscured,
                   onToggleVisibility: () {
                     setState(() {
@@ -152,7 +151,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 // --- CAMPO DE REPETIR SENHA ---
                 _buildPasswordField(
                   label: 'Repita a senha',
-                  controller: _confirmPasswordController, // Conectado
+                  controller: _confirmPasswordController,
                   isObscured: _isConfirmPasswordObscured,
                   onToggleVisibility: () {
                     setState(() {
@@ -175,7 +174,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     ),
                   ),
                   child: _isLoading
-                      ? const SizedBox( // Mostra o "loading"
+                      ? const SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
@@ -183,7 +182,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text( // Mostra o texto normal
+                      : const Text(
                           'Próximo',
                           style: TextStyle(
                             fontSize: 16,
@@ -218,7 +217,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
         const SizedBox(height: 8),
         TextField(
-          controller: controller, // Conectado
+          controller: controller,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             filled: true,
@@ -261,7 +260,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
         const SizedBox(height: 8),
         TextField(
-          controller: controller, // Conectado
+          controller: controller,
           obscureText: isObscured,
           decoration: InputDecoration(
             filled: true,
