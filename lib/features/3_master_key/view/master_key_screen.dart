@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:atividade_01/features/credentials/view/home_screen.dart';
+import 'package:atividade_01/features/2_credentials/view/home_screen.dart';
 import 'package:atividade_01/model/auth_controller.dart';
 
 class MasterKeyScreen extends StatefulWidget {

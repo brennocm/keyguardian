@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // 1. IMPORTES ATUALIZADOS para sua nova estrutura
-import 'package:atividade_01/features/auth/view/welcome_screen.dart';
-import 'package:atividade_01/features/master_key/view/master_key_screen.dart'; // <-- ADICIONADO
+import 'package:atividade_01/features/1_auth/view/welcome_screen.dart';
+import 'package:atividade_01/features/3_master_key/view/master_key_screen.dart'; // <-- ADICIONADO
 import 'package:atividade_01/model/auth_controller.dart'; // <-- ADICIONADO
 
 import 'package:firebase_core/firebase_core.dart';
