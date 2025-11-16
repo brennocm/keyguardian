@@ -1,0 +1,92 @@
+graph TB
+    subgraph "Camada de Apresentação (UI)"
+        WELCOME[Welcome Screen]
+        LOGIN[Login Screen]
+        CREATE[Create Account Screen]
+        FORGOT[Forgot Password Screen]
+        PROFILE[User Profile Screen]
+        
+        MASTER_CREATE[Create Master Key Screen]
+        MASTER_LOGIN[Master Key Screen]
+        
+        HOME[Home Screen]
+        ADD[Add Credential Screen]
+        DETAILS[Credential Details Screen]
+        GENERATOR[Password Generator Screen]
+    end
+    
+    subgraph "Camada de Controle"
+        AUTH_CTRL[Auth Controller]
+        CRED_BLOC[Credential BLoC]
+    end
+    
+    subgraph "Camada de Negócio (Services)"
+        MASTER_SVC[Master Key Service]
+        ENCRYPT_SVC[Encryption Service<br/>AES-256-CBC]
+        HIBP_SVC[HIBP Service<br/>SHA-1 + k-Anonymity]
+    end
+    
+    subgraph "Camada de Dados"
+        CRED_PROVIDER[Credential Provider]
+        AUTH_PROVIDER[Firebase Auth]
+    end
+    
+    subgraph "Camada de Persistência"
+        FIRESTORE[(Cloud Firestore)]
+        FIREBASE_AUTH[(Firebase Authentication)]
+    end
+    
+    subgraph "APIs Externas"
+        HIBP_API[Have I Been Pwned API<br/>pwnedpasswords.com]
+    end
+    
+    %% Fluxo de Autenticação
+    WELCOME --> LOGIN
+    WELCOME --> CREATE
+    WELCOME --> FORGOT
+    LOGIN --> AUTH_CTRL
+    CREATE --> AUTH_CTRL
+    FORGOT --> AUTH_CTRL
+    PROFILE --> AUTH_CTRL
+    
+    AUTH_CTRL --> AUTH_PROVIDER
+    AUTH_PROVIDER --> FIREBASE_AUTH
+    
+    %% Fluxo de Master Key
+    CREATE --> MASTER_CREATE
+    LOGIN --> MASTER_LOGIN
+    MASTER_CREATE --> MASTER_SVC
+    MASTER_LOGIN --> MASTER_SVC
+    MASTER_SVC --> ENCRYPT_SVC
+    MASTER_SVC --> FIRESTORE
+    
+    %% Fluxo de Credenciais
+    MASTER_LOGIN --> HOME
+    MASTER_CREATE --> HOME
+    HOME --> ADD
+    HOME --> DETAILS
+    HOME --> GENERATOR
+    HOME --> PROFILE
+    
+    ADD --> CRED_BLOC
+    DETAILS --> CRED_BLOC
+    HOME --> CRED_BLOC
+    
+    CRED_BLOC --> CRED_PROVIDER
+    CRED_PROVIDER --> ENCRYPT_SVC
+    CRED_PROVIDER --> FIRESTORE
+    
+    %% Verificação HIBP
+    ADD -.->|Verifica Segurança| HIBP_SVC
+    DETAILS -.->|Verifica Segurança| HIBP_SVC
+    HIBP_SVC -.-> HIBP_API
+    
+    %% Estilos
+    style AUTH_CTRL fill:#4a90e2,stroke:#2e5c8a,color:#fff
+    style CRED_BLOC fill:#4a90e2,stroke:#2e5c8a,color:#fff
+    style MASTER_SVC fill:#50c878,stroke:#2d7a4a,color:#fff
+    style ENCRYPT_SVC fill:#f39c12,stroke:#c87f0a,color:#fff
+    style HIBP_SVC fill:#a463f2,stroke:#7b47b8,color:#fff
+    style FIRESTORE fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style FIREBASE_AUTH fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style HIBP_API fill:#e74c3c,stroke:#c0392b,color:#fff
