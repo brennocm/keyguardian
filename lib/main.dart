@@ -24,7 +24,6 @@ class KeyGuardianApp extends StatelessWidget {
       title: 'KeyGuardian',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // ... seu tema
         fontFamily: 'Sans-serif',
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
