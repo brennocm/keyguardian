@@ -67,6 +67,3 @@ Para rodar este projeto em sua máquina local:
     ```bash
     flutter run
     ```
-
----
-**Status do Projeto:** ✅ Finalizado
