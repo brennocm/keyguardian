@@ -1,76 +1,74 @@
-# KeyGuardian - O Cofre Digital para Suas Senhas
+# KeyGuardian
 
-KeyGuardian é um aplicativo móvel desenvolvido com Flutter que serve como um cofre de senhas seguro e intuitivo. Este projeto foi finalizado e implementa um fluxo completo de gerenciamento de credenciais com autenticação segura e criptografia.
+KeyGuardian is a password vault for mobile, built with Flutter. Credentials are encrypted on the device before they are stored in Firebase, and a master key guards access to the vault. The project is finished and covers the whole flow, from sign-up to managing credentials.
 
-## 🚀 Funcionalidades Implementadas
+## Features
 
-O aplicativo conta com as seguintes funcionalidades, organizadas por módulos:
+The app is organized in modules:
 
-*   **Autenticação (`auth`):**
-    *   **Tela de Boas-vindas:** Ponto de partida com opções de login e cadastro.
-    *   **Login e Cadastro:** Autenticação de usuários utilizando Firebase Auth.
-    *   **Recuperação de Senha:** Fluxo para redefinição de senha via e-mail.
-    *   **Perfil do Usuário:** Visualização e gerenciamento de dados da conta.
+* **Authentication (`auth`)**
+  * **Welcome screen:** starting point with sign-in and sign-up.
+  * **Sign-in and sign-up:** user authentication with Firebase Auth.
+  * **Password recovery:** reset by e-mail.
+  * **User profile:** view and manage account data.
 
-*   **Segurança (`master_key`):**
-    *   **Chave Mestra:** Camada adicional de segurança. O usuário deve criar e validar uma chave mestra para acessar o cofre, garantindo que apenas o proprietário tenha acesso aos dados sensíveis.
+* **Security (`master_key`)**
+  * **Master key:** an extra layer of protection. The user creates and confirms a master key that is required to open the vault, so only the owner reaches the sensitive data.
 
-*   **Cofre de Credenciais (`credentials`):**
-    *   **Home:** Listagem de todas as credenciais salvas.
-    *   **Adicionar Credencial:** Formulário para salvar novos logins e senhas.
-    *   **Detalhes da Credencial:** Visualização segura e edição de informações de login.
+* **Credential vault (`credentials`)**
+  * **Home:** list of every saved credential.
+  * **Add credential:** form to save new logins and passwords.
+  * **Credential details:** view and edit login information.
 
-*   **Ferramentas (`generator`):**
-    *   **Gerador de Senhas:** Utilitário para criar senhas fortes e customizáveis (tamanho, caracteres especiais, números, etc.).
+* **Tools (`generator`)**
+  * **Password generator:** strong passwords with configurable length, special characters, numbers and so on.
 
-## 🏛️ Estrutura do Projeto
+## Project structure
 
-O projeto adota uma arquitetura baseada em **Features** (Funcionalidades), facilitando a manutenção e escalabilidade. A estrutura de pastas em `lib/` é organizada da seguinte forma:
+The code is organized by **feature**, which keeps it easy to maintain and extend. Inside `lib/`:
 
-*   **`lib/features/`**: Contém os módulos principais da aplicação.
-    *   **`auth/`**: Telas e lógica de autenticação (Login, Cadastro, Perfil).
-    *   **`credentials/`**: Gerenciamento das credenciais (Home, Adicionar, Detalhes).
-    *   **`master_key/`**: Lógica e telas relacionadas à Chave Mestra.
-    *   **`generator/`**: Funcionalidade do Gerador de Senhas.
-*   **`lib/main.dart`**: Ponto de entrada da aplicação, configuração do Firebase e temas.
+* **`lib/features/`**: the app's main modules.
+  * **`auth/`**: authentication screens and logic (sign-in, sign-up, profile).
+  * **`credentials/`**: credential management (home, add, details).
+  * **`master_key/`**: master key logic and screens.
+  * **`generator/`**: the password generator.
+* **`lib/main.dart`**: entry point, Firebase setup and themes.
 
-Cada feature geralmente segue uma subdivisão interna como `view` (telas e widgets), `bloc`/`controller` (gerenciamento de estado) e `data` (repositórios e models).
+Each feature is usually split into `view` (screens and widgets), `bloc`/`controller` (state management) and `data` (repositories and models).
 
-## 🛠️ Tecnologias Utilizadas
+## Stack
 
-*   **Flutter:** Framework principal para desenvolvimento UI.
-*   **Firebase:**
-    *   **Authentication:** Gerenciamento de usuários.
-    *   **Firestore:** Banco de dados NoSQL para armazenamento das credenciais (criptografadas).
-*   **Gerenciamento de Estado:** Utilização de **Bloc/Cubit** para controle de estado reativo e previsível.
-*   **Segurança:**
-    *   **flutter_secure_storage:** Armazenamento seguro local.
-    *   **encrypt:** Criptografia de dados sensíveis antes do envio ao banco.
+* **Flutter** for the UI.
+* **Firebase**
+  * **Authentication:** user management.
+  * **Firestore:** NoSQL database for the (encrypted) credentials.
+* **State management:** **Bloc/Cubit**.
+* **Security**
+  * **flutter_secure_storage:** secure local storage.
+  * **encrypt:** encrypts sensitive data before it is sent to the database.
 
-## 🚀 Como Executar o Projeto
+## Running it
 
-Para rodar este projeto em sua máquina local:
-
-1.  **Pré-requisitos:** Certifique-se de ter o Flutter SDK instalado e configurado.
-2.  **Clone o repositório:**
+1. **Requirements:** the Flutter SDK, installed and configured.
+2. **Clone the repository:**
     ```bash
     git clone https://github.com/brennocm/keyguardian.git
     cd keyguardian
     ```
-3.  **Instale as dependências:**
+3. **Install the dependencies:**
     ```bash
     flutter pub get
     ```
-4.  **Configuração do Firebase:** o repositório traz a configuração do projeto Firebase original (`lib/firebase_options.dart` e `android/app/google-services.json`). Para usar o seu próprio projeto, crie um no console do Firebase com Authentication (e-mail e senha) e Firestore, e gere os arquivos de novo:
+4. **Firebase:** the repository ships the configuration of the original Firebase project (`lib/firebase_options.dart` and `android/app/google-services.json`). To use your own project, create one in the Firebase console with Authentication (e-mail and password) and Firestore, then regenerate the files:
     ```bash
     dart pub global activate flutterfire_cli
     flutterfire configure
     ```
-5.  **Execute o aplicativo:**
+5. **Run the app:**
     ```bash
     flutter run
     ```
 
-## Licença
+## License
 
 [MIT](LICENSE)
