@@ -54,16 +54,23 @@ Para rodar este projeto em sua máquina local:
 1.  **Pré-requisitos:** Certifique-se de ter o Flutter SDK instalado e configurado.
 2.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/brennocm/SI700-mobile
-    cd SI700-mobile
+    git clone https://github.com/brennocm/keyguardian.git
+    cd keyguardian
     ```
 3.  **Instale as dependências:**
     ```bash
     flutter pub get
     ```
-4.  **Configuração do Firebase:**
-    *   Certifique-se de que o arquivo `firebase_options.dart` está configurado corretamente para o seu projeto Firebase.
+4.  **Configuração do Firebase:** o repositório traz a configuração do projeto Firebase original (`lib/firebase_options.dart` e `android/app/google-services.json`). Para usar o seu próprio projeto, crie um no console do Firebase com Authentication (e-mail e senha) e Firestore, e gere os arquivos de novo:
+    ```bash
+    dart pub global activate flutterfire_cli
+    flutterfire configure
+    ```
 5.  **Execute o aplicativo:**
     ```bash
     flutter run
     ```
+
+## Licença
+
+[MIT](LICENSE)
