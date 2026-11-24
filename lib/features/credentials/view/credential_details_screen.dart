@@ -6,16 +6,17 @@ import 'package:atividade_01/features/credentials/bloc/credential_bloc.dart';
 import 'package:atividade_01/features/credentials/bloc/credential_event.dart';
 import 'package:atividade_01/features/credentials/bloc/credential_state.dart';
 import 'package:atividade_01/core/services/hibp_service.dart';
+import 'package:atividade_01/core/crypto/vault_crypto.dart';
 
 class CredentialDetailsScreen extends StatefulWidget {
   final CredentialModel credential;
-  final String masterKey;
+  final VaultKey vaultKey;
   final CredentialBloc bloc;
 
   const CredentialDetailsScreen({
     super.key,
     required this.credential,
-    required this.masterKey,
+    required this.vaultKey,
     required this.bloc,
   });
 
@@ -86,7 +87,7 @@ class _CredentialDetailsScreenState extends State<CredentialDetailsScreen> {
       websiteUrl: _urlController.text,
     );
 
-    widget.bloc.add(UpdateCredential(updatedCredential, widget.masterKey));
+    widget.bloc.add(UpdateCredential(updatedCredential, widget.vaultKey));
   }
 
   void _handleDelete() {

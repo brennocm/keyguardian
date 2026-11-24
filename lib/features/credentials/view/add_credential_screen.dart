@@ -5,15 +5,16 @@ import 'package:atividade_01/features/credentials/bloc/credential_bloc.dart';
 import 'package:atividade_01/features/credentials/bloc/credential_event.dart';
 import 'package:atividade_01/features/credentials/bloc/credential_state.dart';
 import 'package:atividade_01/core/services/hibp_service.dart';
+import 'package:atividade_01/core/crypto/vault_crypto.dart';
 
 class AddCredentialScreen extends StatefulWidget {
   final CredentialBloc bloc;
-  final String masterKey;
+  final VaultKey vaultKey;
 
   const AddCredentialScreen({
     super.key,
     required this.bloc,
-    required this.masterKey,
+    required this.vaultKey,
   });
 
   @override
@@ -102,7 +103,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
       );
 
       widget.bloc.add(
-        AddCredential(newCredential, widget.masterKey),
+        AddCredential(newCredential, widget.vaultKey),
       );
     }
   }

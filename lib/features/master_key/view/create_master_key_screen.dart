@@ -62,13 +62,15 @@ class _CreateMasterKeyScreenState extends State<CreateMasterKeyScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Cria o documento de verificação
-      await _masterKeyService.createVerificationDocument(masterKey);
+      // Deriva a chave do cofre e grava o documento de verificação
+      final vaultKey = await _masterKeyService.createVault(masterKey);
+      _masterKeyController.clear();
+      _confirmMasterKeyController.clear();
 
       if (mounted) {
         // Navega para a tela principal
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen(masterKey: masterKey)),
+          MaterialPageRoute(builder: (_) => HomeScreen(vaultKey: vaultKey)),
         );
       }
     } catch (e) {

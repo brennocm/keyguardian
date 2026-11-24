@@ -1,17 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:atividade_01/core/models/credential_model.dart';
-import 'package:atividade_01/core/services/encryption_service.dart';
+import 'package:atividade_01/core/crypto/vault_crypto.dart';
+import 'package:atividade_01/core/services/master_key_service.dart';
 
 class CredentialProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final EncryptionService _encryptionService = EncryptionService();
 
   String? _getUserId() {
     final User? user = _auth.currentUser;
     return user?.uid;
   }
+
+  /// Binds each sealed password to its owner, so it cannot be moved elsewhere.
+  String _passwordAad() =>
+      VaultCrypto.aad(_getUserId() ?? '', MasterKeyService.passwordPurpose);
 
   CollectionReference<Map<String, dynamic>>? _getCredentialsCollection() {
     final userId = _getUserId();
@@ -25,15 +29,16 @@ class CredentialProvider {
   }
 
   /// CREATE: Adiciona uma nova credencial criptografada
-  Future<void> addCredential(CredentialModel credential, String masterKey) async {
+  Future<void> addCredential(CredentialModel credential, VaultKey vaultKey) async {
     try {
       final collection = _getCredentialsCollection();
       if (collection == null) throw Exception("Usuário não logado.");
       
       // Criptografa a senha antes de salvar
-      final encryptedPassword = _encryptionService.encrypt(
+      final encryptedPassword = VaultCrypto.encrypt(
         credential.password,
-        masterKey,
+        vaultKey,
+        aad: _passwordAad(),
       );
       
       // Cria uma nova credencial com a senha criptografada
@@ -53,7 +58,7 @@ class CredentialProvider {
   }
 
   /// READ: Retorna as credenciais descriptografadas em tempo real
-  Stream<List<CredentialModel>> getCredentials(String masterKey) {
+  Stream<List<CredentialModel>> getCredentials(VaultKey vaultKey) {
     final collection = _getCredentialsCollection();
     if (collection == null) {
       return Stream.value([]);
@@ -65,9 +70,10 @@ class CredentialProvider {
         
         // Descriptografa a senha
         try {
-          final decryptedPassword = _encryptionService.decrypt(
+          final decryptedPassword = VaultCrypto.decrypt(
             credential.password,
-            masterKey,
+            vaultKey,
+            aad: _passwordAad(),
           );
           
           return CredentialModel(
@@ -94,7 +100,7 @@ class CredentialProvider {
   }
 
   /// UPDATE: Atualiza uma credencial criptografada
-  Future<void> updateCredential(CredentialModel credential, String masterKey) async {
+  Future<void> updateCredential(CredentialModel credential, VaultKey vaultKey) async {
     try {
       final collection = _getCredentialsCollection();
       if (collection == null) throw Exception("Usuário não logado.");
@@ -102,9 +108,10 @@ class CredentialProvider {
       if (credential.id == null) throw Exception("ID da credencial é nulo.");
 
       // Criptografa a senha antes de atualizar
-      final encryptedPassword = _encryptionService.encrypt(
+      final encryptedPassword = VaultCrypto.encrypt(
         credential.password,
-        masterKey,
+        vaultKey,
+        aad: _passwordAad(),
       );
       
       final encryptedCredential = CredentialModel(

@@ -48,9 +48,9 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final isValid = await _masterKeyService.validateMasterKey(masterKey);
+      final vaultKey = await _masterKeyService.unlock(masterKey);
 
-      if (!isValid) {
+      if (vaultKey == null) {
         if (mounted) {
           _showError('Chave-mestra incorreta. Tente novamente.');
         }
@@ -59,11 +59,12 @@ class _MasterKeyScreenState extends State<MasterKeyScreen> {
         return;
       }
 
+      _masterKeyController.clear();
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(masterKey: masterKey),
+            builder: (context) => HomeScreen(vaultKey: vaultKey),
           ),
         );
       }

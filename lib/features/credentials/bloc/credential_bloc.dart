@@ -25,7 +25,7 @@ class CredentialBloc extends Bloc<CredentialEvent, CredentialState> {
     emit(CredentialLoading());
     try {
       await emit.forEach(
-        _provider.getCredentials(event.masterKey),
+        _provider.getCredentials(event.vaultKey),
         onData: (List<CredentialModel> credentials) {
           return CredentialLoaded(credentials);
         },
@@ -44,7 +44,7 @@ class CredentialBloc extends Bloc<CredentialEvent, CredentialState> {
     Emitter<CredentialState> emit,
   ) async {
     try {
-      await _provider.addCredential(event.credential, event.masterKey);
+      await _provider.addCredential(event.credential, event.vaultKey);
       emit(CredentialOperationSuccess());
     } catch (e) {
       emit(CredentialFailure(e.toString()));
@@ -57,7 +57,7 @@ class CredentialBloc extends Bloc<CredentialEvent, CredentialState> {
     Emitter<CredentialState> emit,
   ) async {
     try {
-      await _provider.updateCredential(event.credential, event.masterKey);
+      await _provider.updateCredential(event.credential, event.vaultKey);
       emit(CredentialOperationSuccess());
     } catch (e) {
       emit(CredentialFailure(e.toString()));

@@ -44,8 +44,27 @@ Each feature is usually split into `view` (screens and widgets), `bloc`/`control
   * **Firestore:** NoSQL database for the (encrypted) credentials.
 * **State management:** **Bloc/Cubit**.
 * **Security**
+  * **pointycastle:** AES-256-GCM and SHA-256 primitives for the vault encryption (see below).
   * **flutter_secure_storage:** secure local storage.
-  * **encrypt:** encrypts sensitive data before it is sent to the database.
+
+## How the vault is encrypted
+
+Passwords are encrypted on the device; Firestore only ever stores ciphertext.
+
+* **Key derivation:** the master key is stretched with **PBKDF2-HMAC-SHA256**, **600,000 iterations** (the OWASP recommendation) and a random 16-byte salt per user. The derivation runs in a background isolate so the UI stays responsive. The master key is never stored or sent anywhere.
+* **Encryption:** each password is sealed with **AES-256-GCM**, using a fresh random 96-bit nonce and a 128-bit authentication tag. Tampered or swapped ciphertext fails to decrypt instead of returning garbage.
+* **Binding:** the GCM associated data includes the user ID and the field, so a ciphertext copied into another account or field is rejected.
+* **Unlock check:** `users/{uid}` stores the KDF parameters and a sealed verification value. A wrong master key fails the GCM tag check. Parameters weaker than 600,000 iterations are refused, so whoever can write that document cannot downgrade the KDF.
+* **Stored format:** `v2:<base64 nonce>:<base64 ciphertext+tag>`.
+* **Migration:** vaults created with the first version (AES-CBC with the master key used directly as the key) are re-encrypted with the scheme above on the first unlock, in a single atomic Firestore batch.
+
+The crypto core lives in `lib/core/crypto/vault_crypto.dart` and has no Flutter dependency. `test/vault_crypto_test.dart` checks it against the RFC 7914 PBKDF2 vectors, against pointycastle on random inputs, for tamper and wrong-key rejection, and against a value produced by the old scheme:
+
+```bash
+flutter test
+```
+
+Out of scope for this project: Firestore security rules are configured in the Firebase console (each user should only read and write `users/{their uid}/**`), and the master key is not recoverable: forgetting it means losing the vault.
 
 ## Running it
 

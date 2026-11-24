@@ -12,10 +12,11 @@ import 'package:atividade_01/features/generator/view/password_generator_screen.d
 import 'package:atividade_01/features/auth/view/user_profile_screen.dart';
 import 'package:atividade_01/features/auth/view/welcome_screen.dart';
 import 'package:atividade_01/features/auth/auth_controller.dart';
+import 'package:atividade_01/core/crypto/vault_crypto.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String masterKey;
-  const HomeScreen({super.key, required this.masterKey});
+  final VaultKey vaultKey;
+  const HomeScreen({super.key, required this.vaultKey});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _credentialBloc = CredentialBloc(provider: CredentialProvider());
-    _credentialBloc.add(LoadCredentials(widget.masterKey));
+    _credentialBloc.add(LoadCredentials(widget.vaultKey));
   }
 
   // Verifica se o BLoC não está fechado antes de fechar
@@ -272,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(
                           builder: (context) => CredentialDetailsScreen(
                             credential: credential,
-                            masterKey: widget.masterKey,
+                            vaultKey: widget.vaultKey,
                             bloc: _credentialBloc,
                           ),
                         ),
@@ -295,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(
                 builder: (context) => AddCredentialScreen(
                   bloc: _credentialBloc,
-                  masterKey: widget.masterKey,
+                  vaultKey: widget.vaultKey,
                 ),
               ),
             );
